@@ -1,0 +1,9 @@
+{
+  "name": "uniRP - Gestão Estratégica de RP",
+  "description": "Plataforma SaaS Multi-Tenant para Relações Públicas com IA Gemini e Supabase.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
