@@ -5,7 +5,7 @@ export const gemini = {
     async generateContent(prompt, instituicaoId) {
         // 1. Busca o "Cérebro Institucional" (Contexto)
         const { data: inst, error } = await supabase
-            .from('instituicoes')
+            .from('settings')
             .select('gemini_key, tom_de_voz, missao, visao, valores, historico')
             .eq('id', instituicaoId)
             .single();
@@ -46,7 +46,7 @@ export const gemini = {
             
             if (result.error) throw new Error(result.error.message);
             
-            return result.candidates[0].content.parts[0].text;
+            return result?.candidates?.[0]?.content?.parts?.[0]?.text || "Erro ao processar resposta da IA.";
         } catch (error) {
             console.error("Erro na IA:", error);
             throw error;

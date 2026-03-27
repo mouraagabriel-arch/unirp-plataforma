@@ -1,0 +1,297 @@
+import { useState } from 'react';
+import { 
+  MessageSquare, Send, Sparkles, 
+  Loader2, Copy, Download, 
+  History, Share2, AlertCircle,
+  ShieldCheck, Globe, Users,
+  CheckCircle2, XCircle, Landmark,
+  Zap, FileText, Filter, Search
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../../lib/utils';
+
+const MOCK_TOPICS = [
+  { id: '1', title: 'Aumento do IPTU', date: '25 Mar, 2024', status: 'Publicado', sentiment: 'Crítico' },
+  { id: '2', title: 'Reforma da Previdência Municipal', date: '24 Mar, 2024', status: 'Em Rascunho', sentiment: 'Sensível' },
+  { id: '3', title: 'Greve dos Professores', date: '22 Mar, 2024', status: 'Publicado', sentiment: 'Alto Risco' },
+];
+
+export function GabinetePosicionamento({ isDarkMode }: { isDarkMode: boolean }) {
+  const [topic, setTopic] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [positioning, setPositioning] = useState<any>(null);
+
+  const generatePositioning = () => {
+    if (!topic) return;
+    setIsGenerating(true);
+    setTimeout(() => {
+      setPositioning({
+        title: `Nota Oficial: ${topic}`,
+        content: `O Gabinete do Vereador vem a público esclarecer sua posição sobre ${topic}. Reafirmamos nosso compromisso com a transparência e o bem-estar da população. Entendemos as preocupações levantadas e estamos trabalhando para garantir que o interesse público prevaleça em todas as decisões legislativas.`,
+        tags: ['Transparência', 'Compromisso', 'Diálogo'],
+        audience: 'Eleitorado Geral',
+        risk: 'Médio'
+      });
+      setIsGenerating(false);
+    }, 2000);
+  };
+
+  return (
+    <div className="space-y-12 pb-20">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div className="space-y-2">
+          <motion.h1 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-5xl font-black tracking-tighter text-white"
+          >
+            Central de <span className="text-brand-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">Posicionamento</span>
+          </motion.h1>
+          <p className="text-slate-400 font-medium max-w-2xl">
+            Gere notas oficiais, comunicados e posicionamentos estratégicos com o auxílio da IA, garantindo o tom de voz ideal para cada situação política.
+          </p>
+        </div>
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex gap-4"
+        >
+          <button className="flex items-center gap-3 px-8 py-4 bg-white/5 text-white border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition-all duration-300">
+            <History className="w-5 h-5" />
+            Histórico de Notas
+          </button>
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {/* Sidebar de Tópicos */}
+        <div className="lg:col-span-1 space-y-8 h-fit">
+          <div className="glass-card p-8 rounded-[3rem] border border-white/5 shadow-2xl">
+            <div className="space-y-6 mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center border border-brand-accent/20">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Tópicos Quentes</h3>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1 px-4 py-3 bg-white/5 rounded-xl flex items-center gap-2 border border-white/10 focus-within:border-brand-accent/50 transition-all">
+                  <Search className="w-4 h-4 text-slate-500" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar tópico..." 
+                    className="bg-transparent border-none outline-none text-xs font-medium w-full text-white placeholder:text-slate-600" 
+                  />
+                </div>
+                <button className="p-3 bg-white/5 rounded-xl text-slate-400 hover:text-brand-accent border border-white/10 hover:bg-white/10 transition-all">
+                  <Filter className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {MOCK_TOPICS.map((t, index) => (
+                <motion.div 
+                  key={t.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="p-6 rounded-[2rem] border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 blur-2xl -mr-12 -mt-12 group-hover:bg-brand-accent/10 transition-colors" />
+                  
+                  <div className="flex items-start justify-between mb-4 relative z-10">
+                    <span className={cn(
+                      "text-[8px] font-black px-2 py-1 rounded uppercase tracking-widest border",
+                      t.sentiment === 'Alto Risco' ? "bg-brand-rose/10 text-brand-rose border-brand-rose/20" :
+                      t.sentiment === 'Crítico' ? "bg-brand-amber/10 text-brand-amber border-brand-amber/20" :
+                      "bg-brand-accent/10 text-brand-accent border-brand-accent/20"
+                    )}>
+                      {t.sentiment}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t.date}</span>
+                  </div>
+                  <p className="font-black text-sm text-white group-hover:text-brand-accent transition-all relative z-10">{t.title}</p>
+                  <div className="flex items-center gap-2 mt-4 relative z-10">
+                    <div className="w-1.5 h-1.5 bg-brand-emerald rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t.status}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Gerador de Nota */}
+        <div className="lg:col-span-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-12 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden min-h-[600px] flex flex-col"
+          >
+            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/5 blur-[100px] -mr-48 -mt-48 pointer-events-none" />
+            
+            <AnimatePresence mode="wait">
+              {!positioning && !isGenerating ? (
+                <motion.div 
+                  key="input"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className="space-y-10 flex-1 flex flex-col relative z-10"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 bg-brand-accent/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-brand-accent/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
+                      <MessageSquare className="w-8 h-8 text-brand-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-black text-white tracking-tight">Novo Posicionamento</h3>
+                      <p className="text-slate-500 font-medium">Defina o tema para que a IA redija a nota ideal.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 flex-1 flex flex-col">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-2">Sobre qual polêmica ou tema deseja se posicionar?</label>
+                    <textarea 
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      placeholder="Ex: Minha posição sobre a nova ciclovia no centro..."
+                      className="w-full flex-1 p-10 rounded-[3rem] font-medium leading-relaxed resize-none border-2 border-white/5 bg-white/5 focus:border-brand-accent/50 transition-all outline-none text-white text-lg placeholder:text-slate-700"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 flex items-center gap-5 group hover:bg-white/10 transition-all">
+                      <div className="w-12 h-12 bg-brand-accent/10 rounded-2xl flex items-center justify-center border border-brand-accent/20 group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6 text-brand-accent" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Público-Alvo</p>
+                        <p className="font-black text-white text-lg">Eleitorado Geral</p>
+                      </div>
+                    </div>
+                    <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 flex items-center gap-5 group hover:bg-white/10 transition-all">
+                      <div className="w-12 h-12 bg-brand-accent/10 rounded-2xl flex items-center justify-center border border-brand-accent/20 group-hover:scale-110 transition-transform">
+                        <Globe className="w-6 h-6 text-brand-accent" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tom de Voz</p>
+                        <p className="font-black text-white text-lg">Equilibrado</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={generatePositioning}
+                    disabled={!topic || isGenerating}
+                    className="w-full py-8 bg-brand-accent text-white rounded-[2.5rem] font-black text-xl hover:bg-brand-accent/90 transition-all shadow-[0_10px_30px_rgba(139,92,246,0.3)] flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  >
+                    <Sparkles className="w-7 h-7 group-hover:rotate-12 transition-transform" />
+                    Gerar Nota Oficial com IA
+                  </button>
+                </motion.div>
+              ) : isGenerating ? (
+                <motion.div 
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 flex flex-col items-center justify-center text-center p-12 relative z-10"
+                >
+                  <div className="relative mb-12">
+                    <div className="w-32 h-32 bg-brand-accent/20 rounded-[3rem] flex items-center justify-center border border-brand-accent/30 animate-pulse">
+                      <Loader2 className="w-16 h-16 text-brand-accent animate-spin" />
+                    </div>
+                    <div className="absolute -top-4 -right-4">
+                      <Sparkles className="w-10 h-10 text-brand-accent animate-bounce" />
+                    </div>
+                  </div>
+                  <h3 className="text-4xl font-black text-white tracking-tighter mb-4">IA Redigindo Nota...</h3>
+                  <p className="text-slate-400 text-xl font-medium max-w-md">Buscando o equilíbrio perfeito entre firmeza e diplomacia para o seu mandato.</p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="result"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-10 flex-1 flex flex-col relative z-10"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 bg-brand-emerald/10 text-brand-emerald rounded-2xl flex items-center justify-center border border-brand-emerald/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                        <ShieldCheck className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-black text-white tracking-tight">Nota Oficial Gerada</h3>
+                        <p className="text-slate-500 font-medium">Revisada e otimizada pela IA estratégica.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button className="p-4 bg-white/5 text-slate-400 hover:text-brand-accent rounded-2xl transition-all border border-white/5 hover:bg-white/10">
+                        <Copy className="w-6 h-6" />
+                      </button>
+                      <button className="p-4 bg-white/5 text-slate-400 hover:text-brand-accent rounded-2xl transition-all border border-white/5 hover:bg-white/10">
+                        <Share2 className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-12 bg-white/5 rounded-[3.5rem] border border-white/5 space-y-8 flex-1 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-emerald/5 blur-[80px] -mr-32 -mt-32 pointer-events-none" />
+                    
+                    <h4 className="text-3xl font-black text-white relative z-10 tracking-tight">{positioning.title}</h4>
+                    <p className="text-xl font-medium leading-relaxed text-slate-300 relative z-10">
+                      {positioning.content}
+                    </p>
+                    <div className="flex flex-wrap gap-3 relative z-10">
+                      {positioning.tags.map((tag: string, i: number) => (
+                        <span key={i} className="px-5 py-2.5 bg-brand-accent/10 border border-brand-accent/20 rounded-full text-[10px] font-black text-brand-accent uppercase tracking-widest">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="p-10 bg-brand-amber/5 rounded-[3rem] border border-brand-amber/20 group hover:bg-brand-amber/10 transition-all">
+                      <div className="flex items-center gap-3 mb-4">
+                        <AlertCircle className="w-5 h-5 text-brand-amber" />
+                        <span className="text-[10px] font-black text-brand-amber uppercase tracking-widest">Risco de Repercussão</span>
+                      </div>
+                      <p className="text-4xl font-black text-white mb-2">{positioning.risk}</p>
+                      <p className="text-sm font-bold text-slate-500">Monitorar comentários nas redes sociais e grupos de oposição.</p>
+                    </div>
+                    <div className="p-10 bg-brand-accent/5 rounded-[3rem] border border-brand-accent/20 group hover:bg-brand-accent/10 transition-all">
+                      <div className="flex items-center gap-3 mb-4">
+                        <FileText className="w-5 h-5 text-brand-accent" />
+                        <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest">Formato Sugerido</span>
+                      </div>
+                      <p className="text-4xl font-black text-white mb-2">Comunicado PDF</p>
+                      <p className="text-sm font-bold text-slate-500">Ideal para disparo em massa via WhatsApp e Telegram.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6 pt-4">
+                    <button className="flex-1 py-8 bg-brand-emerald text-white rounded-[2.5rem] font-black text-xl hover:bg-brand-emerald/90 transition-all shadow-[0_10px_30px_rgba(16,185,129,0.3)] flex items-center justify-center gap-4 group">
+                      <Send className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Publicar Agora
+                    </button>
+                    <button 
+                      onClick={() => setPositioning(null)}
+                      className="px-12 py-8 bg-white/5 border border-white/10 text-white rounded-[2.5rem] font-black text-xl hover:bg-white/10 transition-all"
+                    >
+                      Novo Tópico
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}

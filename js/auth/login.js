@@ -39,10 +39,10 @@ export const auth = {
      */
     async getUserProfile(userId) {
         const { data, error } = await supabase
-            .from('usuarios')
+            .from('profiles')
             .select(`
                 *,
-                instituicoes (
+                settings (
                     *
                 )
             `)
@@ -62,7 +62,7 @@ export const auth = {
      */
     async checkOnboarding(instituicaoId) {
         const { data, error } = await supabase
-            .from('instituicoes')
+            .from('settings')
             .select('gemini_key, logo_url, smtp_host')
             .eq('id', instituicaoId)
             .single();

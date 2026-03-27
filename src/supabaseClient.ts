@@ -14,24 +14,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const uniRPService = {
     // Agency Profile
     async getProfile() {
-        const { data, error } = await supabase.from('perfil_agencia').select('*').single();
+        const { data, error } = await supabase.from('profiles').select('*').single();
         return { data, error };
     },
 
     // CRM
     async getContacts() {
-        const { data, error } = await supabase.from('crm_contatos').select('*');
+        const { data, error } = await supabase.from('press_contacts').select('*');
         return { data, error };
     },
 
     // Workflow
     async getCards() {
-        const { data, error } = await supabase.from('workflow_cards').select('*');
+        const { data, error } = await supabase.from('demands').select('*');
         return { data, error };
     },
 
     async createCard(card) {
-        const { data, error } = await supabase.from('workflow_cards').insert([card]);
+        const { data, error } = await supabase.from('demands').insert([card]);
         return { data, error };
     },
 
