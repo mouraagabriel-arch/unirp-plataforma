@@ -1,155 +1,251 @@
-import { useState } from 'react';
-import { 
-  Globe, Download, Image as ImageIcon, 
-  FileText, Video, Share2, 
-  Search, Filter, Plus, 
-  CheckCircle2, X, Eye, 
-  Lock, Unlock, Settings,
-  ChevronRight, ArrowRight, MoreVertical
+import { useEffect, useState } from 'react';
+import {
+  Copy,
+  Eye,
+  FileText,
+  FolderOpen,
+  Image as ImageIcon,
+  Link2,
+  Monitor,
+  Settings2,
+  UploadCloud,
+  Video,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
+import { useTenantService } from '../../services/useTenantService';
 
 export function EnterpriseSalaImprensa({ isDarkMode }: { isDarkMode: boolean }) {
-  const [isPublic, setIsPublic] = useState(true);
+  const tenantService = useTenantService();
+  const [activeTab, setActiveTab] = useState<'press-kits' | 'releases' | 'config'>('press-kits');
+  const [publicFolders, setPublicFolders] = useState<Record<string, boolean>>({
+    logos: true,
+    fotos: true,
+    videos: false,
+    manuais: true,
+    estatisticas: false,
+    institucional: true,
+  });
+
+  const pressKitItems = [
+    { id: 'logos', title: 'Logotipos Oficiais', files: '12 arquivos', icon: ImageIcon, tone: 'text-cyan-300' },
+    { id: 'fotos', title: 'Fotos da Gestão', files: '45 arquivos', icon: ImageIcon, tone: 'text-emerald-300' },
+    { id: 'videos', title: 'Vídeos Institucionais', files: '8 arquivos', icon: Video, tone: 'text-violet-300' },
+    { id: 'manuais', title: 'Manuais de Marca', files: '3 arquivos', icon: FileText, tone: 'text-amber-300' },
+    { id: 'estatisticas', title: 'Relatórios e Dados', files: '9 arquivos', icon: Monitor, tone: 'text-rose-300' },
+    { id: 'institucional', title: 'Banco Institucional', files: '28 arquivos', icon: FolderOpen, tone: 'text-indigo-300' },
+  ];
+
+  const releaseItems = [
+    { id: 'rel-1', title: 'Novo Hospital Municipal abre as portas amanhã', date: '25 Mar 2026', sector: 'Saúde' },
+    { id: 'rel-2', title: 'Prefeitura anuncia pacote de mobilidade urbana', date: '24 Mar 2026', sector: 'Obras' },
+    { id: 'rel-3', title: 'Programa de inovação no serviço público é lançado', date: '22 Mar 2026', sector: 'Administração' },
+  ];
+
+  useEffect(() => {
+    tenantService
+      .from('enterprise_sala_configuracao')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) { console.error('Erro ao carregar configuração da sala:', error); return; }
+        if (data && data.length > 0) {
+          const config: Record<string, boolean> = {};
+          data.forEach(row => { config[row.pasta_id] = row.visivel; });
+          setPublicFolders(prev => ({ ...prev, ...config }));
+        }
+      });
+  }, []);
+
+  const toggleFolderVisibility = (folderId: string) => {
+    setPublicFolders((prev) => {
+      const newValue = !prev[folderId];
+      tenantService
+        .from('enterprise_sala_configuracao')
+        .upsert(
+          { pasta_id: folderId, visivel: newValue },
+          { onConflict: 'pasta_id,ambiente' }
+        )
+        .then(({ error }) => {
+          if (error) console.error('Erro ao atualizar visibilidade da pasta:', error);
+        });
+      return { ...prev, [folderId]: newValue };
+    });
+  };
 
   return (
-    <div className="space-y-10 pb-20">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Sala de <span className="text-blue-600">Imprensa</span>
-          </h1>
-          <p className="text-slate-500 font-medium mt-2">Portal público para jornalistas e veículos.</p>
-        </div>
-        
-        <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-[2rem]">
-          <div className="flex items-center gap-3 px-4">
-            {isPublic ? <Unlock className="w-5 h-5 text-emerald-600" /> : <Lock className="w-5 h-5 text-rose-600" />}
-            <span className="text-sm font-black uppercase tracking-widest text-slate-600">
-              Acesso {isPublic ? 'Público' : 'Privado'}
-            </span>
+    <section className={cn('flex flex-col gap-6 w-full max-w-7xl mx-auto py-8 text-slate-100', isDarkMode ? 'text-slate-100' : 'text-slate-100')}>
+      <div className="rounded-3xl border border-indigo-500/30 bg-indigo-900/30 backdrop-blur-xl p-6 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.25),transparent_36%)] pointer-events-none" />
+        <div className="relative flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-200">URL Pública Ativa</p>
+            <h1 className="text-3xl font-black text-white mt-2">Construtor da Sala de Imprensa</h1>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-300/30 bg-white/10 text-indigo-100 font-bold">
+              <Link2 className="w-4 h-4" />
+              imprensa.instituicao.gov.br
+            </div>
           </div>
-          <div 
-            onClick={() => setIsPublic(!isPublic)}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-white/20 bg-white/10 text-white font-bold hover:bg-white/15 transition-all">
+              <Copy className="w-4 h-4" />
+              🔗 Copiar Link
+            </button>
+            <button className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-indigo-300/30 bg-indigo-500/20 text-indigo-100 font-bold hover:bg-indigo-500/25 transition-all">
+              <Eye className="w-4 h-4" />
+              👁️ Ver Portal Público
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 p-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-fit">
+        {[
+          { id: 'press-kits', label: '📁 Press Kits & Arquivos' },
+          { id: 'releases', label: '📰 Releases Publicados' },
+          { id: 'config', label: '🎨 Configurar Portal' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as 'press-kits' | 'releases' | 'config')}
             className={cn(
-              "w-14 h-8 rounded-full p-1 transition-all cursor-pointer relative",
-              isPublic ? "bg-emerald-500" : "bg-slate-300"
+              'px-5 py-3 rounded-xl font-bold transition-all',
+              activeTab === tab.id
+                ? 'bg-brand-accent text-white shadow-[0_0_20px_rgba(99,102,241,0.35)]'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             )}
           >
-            <div className={cn(
-              "w-6 h-6 bg-white rounded-full transition-all shadow-sm",
-              isPublic ? "translate-x-6" : "translate-x-0"
-            )} />
-          </div>
-        </div>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Public View Simulator */}
-      <div className={cn(
-        "p-12 rounded-[4rem] shadow-2xl border relative overflow-hidden",
-        isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
-      )}>
-        {/* Browser Header Mockup */}
-        <div className="absolute top-0 left-0 right-0 h-12 bg-slate-50 border-b border-slate-100 flex items-center px-8 gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-rose-400" />
-            <div className="w-3 h-3 rounded-full bg-amber-400" />
-            <div className="w-3 h-3 rounded-full bg-emerald-400" />
-          </div>
-          <div className="flex-1 max-w-md mx-auto h-7 bg-white rounded-lg border border-slate-200 flex items-center px-4 gap-2">
-            <Lock className="w-3 h-3 text-emerald-500" />
-            <span className="text-[10px] font-medium text-slate-400">imprensa.prefeitura.gov.br</span>
-          </div>
-        </div>
+      <AnimatePresence mode="wait">
+        {activeTab === 'press-kits' && (
+          <motion.div
+            key="press-kits"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {pressKitItems.map((kit) => {
+              const Icon = kit.icon;
+              const isVisible = publicFolders[kit.id];
 
-        <div className="mt-12 pt-12 space-y-12">
-          {/* Public Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-slate-100 pb-12">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center text-white font-black text-3xl">
-                P
-              </div>
-              <div>
-                <h2 className="text-4xl font-black tracking-tighter">Sala de Imprensa Oficial</h2>
-                <p className="text-slate-500 font-medium">Prefeitura Municipal de Exemplo</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <button className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center gap-3">
-                <Share2 className="w-5 h-5" />
-                Compartilhar Portal
-              </button>
-            </div>
-          </div>
-
-          {/* Press Kits Section */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-black">Press Kits & Ativos</h3>
-              <div className="flex gap-4">
-                <button className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-blue-600 transition-all">
-                  <Filter className="w-5 h-5" />
-                </button>
-                <button className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-blue-600 transition-all">
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                { title: 'Logotipos Oficiais', items: '12 arquivos', icon: ImageIcon, color: 'blue' },
-                { title: 'Fotos da Gestão', items: '45 arquivos', icon: ImageIcon, color: 'emerald' },
-                { title: 'Vídeos Institucionais', items: '8 arquivos', icon: Video, color: 'indigo' },
-                { title: 'Releases Recentes', items: '24 arquivos', icon: FileText, color: 'amber' },
-                { title: 'Contatos de Assessoria', items: '1 arquivo', icon: Globe, color: 'rose' },
-                { title: 'Manuais de Marca', items: '3 arquivos', icon: FileText, color: 'slate' },
-              ].map((kit, i) => (
-                <div key={i} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:border-blue-200 transition-all group cursor-pointer">
-                  <div className={cn(
-                    "w-16 h-16 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform",
-                    `bg-${kit.color}-50 text-${kit.color}-600`
-                  )}>
-                    <kit.icon className="w-8 h-8" />
+              return (
+                <article key={kit.id} className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5">
+                  <div className="flex items-start justify-between gap-3 mb-5">
+                    <div className="w-11 h-11 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                      <Icon className={cn('w-5 h-5', kit.tone)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Visível ao Público</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleFolderVisibility(kit.id)}
+                        className={cn(
+                          'w-12 h-7 rounded-full p-1 transition-all border',
+                          isVisible ? 'bg-emerald-500/80 border-emerald-300/40' : 'bg-slate-700/80 border-white/10'
+                        )}
+                      >
+                        <span className={cn('block w-5 h-5 rounded-full bg-white transition-all', isVisible ? 'translate-x-5' : 'translate-x-0')} />
+                      </button>
+                    </div>
                   </div>
-                  <h4 className="text-xl font-black mb-1">{kit.title}</h4>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">{kit.items}</p>
-                  <button className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-widest hover:underline">
-                    <Download className="w-4 h-4" />
-                    Baixar Kit Completo
+
+                  <h3 className="text-xl font-black text-white">{kit.title}</h3>
+                  <p className="text-sm font-medium text-slate-400 mt-2">{kit.files}</p>
+
+                  <button className="mt-6 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all">
+                    <UploadCloud className="w-4 h-4" />
+                    + Fazer Upload
                   </button>
-                </div>
-              ))}
-            </div>
-          </div>
+                </article>
+              );
+            })}
+          </motion.div>
+        )}
 
-          {/* Latest Releases Preview */}
-          <div className="space-y-8">
-            <h3 className="text-2xl font-black">Últimos Releases</h3>
-            <div className="space-y-4">
-              {[
-                { title: 'Novo Hospital Municipal abre as portas amanhã', date: '25 Mar, 2024' },
-                { title: 'Prefeitura anuncia redução de 20% no IPTU', date: '24 Mar, 2024' },
-                { title: 'Obras de saneamento no bairro Sul avançam', date: '22 Mar, 2024' },
-              ].map((release, i) => (
-                <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50 rounded-3xl transition-all cursor-pointer group">
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-600">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-black text-lg">{release.title}</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{release.date}</p>
-                    </div>
+        {activeTab === 'releases' && (
+          <motion.div
+            key="releases"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-6"
+          >
+            <div className="space-y-3">
+              {releaseItems.map((release) => (
+                <article key={release.id} className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{release.sector}</p>
+                    <h3 className="text-lg font-black text-white mt-1">{release.title}</h3>
+                    <p className="text-xs text-slate-400 mt-2">Publicado em {release.date}</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-2 transition-all" />
-                </div>
+                  <button className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-slate-300 hover:text-rose-200 hover:bg-rose-500/15 hover:border-rose-400/30 transition-all">
+                    Despublicar
+                  </button>
+                </article>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'config' && (
+          <motion.div
+            key="config"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-5">
+              <div className="space-y-4">
+                <label className="space-y-2 block">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Nome da Sala de Imprensa</span>
+                  <input
+                    type="text"
+                    defaultValue="Sala de Imprensa Oficial - Prefeitura Municipal"
+                    className="w-full px-5 py-4 rounded-xl border border-white/10 bg-white/5 text-slate-100 font-bold outline-none"
+                  />
+                </label>
+
+                <label className="space-y-2 block">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">E-mail de Contato para Jornalistas</span>
+                  <input
+                    type="email"
+                    defaultValue="imprensa@instituicao.gov.br"
+                    className="w-full px-5 py-4 rounded-xl border border-white/10 bg-white/5 text-slate-100 font-bold outline-none"
+                  />
+                </label>
+
+                <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 min-h-[170px]">
+                  <div className="h-full flex flex-col items-center justify-center text-center">
+                    <UploadCloud className="w-6 h-6 text-brand-accent" />
+                    <h4 className="text-base font-black text-white mt-3">Banner do Portal</h4>
+                    <p className="text-xs text-slate-400 mt-2">Área de upload para arte principal da página pública.</p>
+                    <button className="mt-4 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-slate-100 hover:bg-white/10 transition-all">
+                      Enviar Banner
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Settings2 className="w-4 h-4 text-indigo-300" />
+                  <p className="text-sm font-black text-white">Pré-visualização da Configuração</p>
+                </div>
+                <div className="space-y-3 text-sm text-slate-300">
+                  <p>Portal público com vitrine de releases, arquivos e canal direto com assessoria.</p>
+                  <p>As alterações desta aba controlam apenas o que o jornalista visualiza externamente.</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
   );
 }

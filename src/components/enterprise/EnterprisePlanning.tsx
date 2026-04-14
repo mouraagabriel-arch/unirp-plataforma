@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Search, Filter, Plus, 
   TrendingUp, TrendingDown, Activity,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
+import { useTenantService } from '../../services/useTenantService';
 
 interface Campaign {
   id: string;
@@ -22,66 +23,126 @@ interface Campaign {
   secretaria: string;
 }
 
-const MOCK_CAMPAIGNS: Campaign[] = [
-  {
-    id: 'CMP-001',
-    titulo: 'Campanha de Vacinação 2024',
-    data_inicio: '2024-04-01',
-    data_fim: '2024-04-30',
-    progresso: 45,
-    status: 'em_andamento',
-    prioridade: 'alta',
-    secretaria: 'Saúde'
-  },
-  {
-    id: 'CMP-002',
-    titulo: 'Inauguração Parque das Águas',
-    data_inicio: '2024-05-15',
-    data_fim: '2024-05-15',
-    progresso: 10,
-    status: 'planejado',
-    prioridade: 'media',
-    secretaria: 'Obras'
-  },
-  {
-    id: 'CMP-003',
-    titulo: 'Semana da Educação Municipal',
-    data_inicio: '2024-03-20',
-    data_fim: '2024-03-27',
-    progresso: 90,
-    status: 'em_andamento',
-    prioridade: 'alta',
-    secretaria: 'Educação'
-  },
-  {
-    id: 'CMP-004',
-    titulo: 'Festival de Inverno 2024',
-    data_inicio: '2024-06-01',
-    data_fim: '2024-06-30',
-    progresso: 0,
-    status: 'planejado',
-    prioridade: 'baixa',
-    secretaria: 'Cultura'
-  }
-];
-
 export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+  const tenantService = useTenantService();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [campaignForm, setCampaignForm] = useState({
+    titulo: '',
+    data_inicio: '',
+    data_fim: '',
+    secretaria: 'Saúde',
+  });
+
+  const tituloRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    tenantService
+      .from('enterprise_campanhas')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { console.error('[Planning] Erro ao carregar campanhas:', error); return; }
+        setCampaigns((data ?? []).map((row) => ({
+          id: row.id,
+          titulo: row.titulo,
+          data_inicio: row.data_inicio,
+          data_fim: row.data_fim,
+          progresso: row.progresso ?? 0,
+          status: row.status as Campaign['status'],
+          prioridade: row.prioridade as Campaign['prioridade'],
+          secretaria: row.secretaria,
+        })));
+      });
+  }, []);
+
+  const resetCampaignForm = () => {
+    setCampaignForm({ titulo: '', data_inicio: '', data_fim: '', secretaria: 'Saúde' });
+    setEditingCampaignId(null);
+  };
+
+  const handleOpenNewCampaign = () => {
+    resetCampaignForm();
+    setIsAdding(true);
+  };
+
+  const handleEditCampaign = (campaign: Campaign) => {
+    setCampaignForm({
+      titulo: campaign.titulo,
+      data_inicio: campaign.data_inicio,
+      data_fim: campaign.data_fim,
+      secretaria: campaign.secretaria,
+    });
+    setEditingCampaignId(campaign.id);
+    setIsAdding(true);
+  };
+
+  const handleSaveCampaign = async () => {
+    const titulo = campaignForm.titulo.trim();
+    if (!titulo) return;
+    const data_inicio = campaignForm.data_inicio;
+    const data_fim = campaignForm.data_fim;
+    const secretaria = campaignForm.secretaria;
+
+    setIsSaving(true);
+    if (editingCampaignId) {
+      const { error } = await tenantService
+        .from('enterprise_campanhas')
+        .update({ titulo, data_inicio, data_fim, secretaria })
+        .eq('id', editingCampaignId);
+
+      if (error) {
+        console.error('[Planning] Erro ao atualizar campanha:', error);
+        alert(`Erro ao atualizar: ${error.message}`);
+      } else {
+        setCampaigns((prev) => prev.map((item) => (
+          item.id === editingCampaignId
+            ? { ...item, titulo, data_inicio, data_fim, secretaria }
+            : item
+        )));
+      }
+    } else {
+      const { data, error } = await tenantService
+        .from('enterprise_campanhas')
+        .insert({ titulo, data_inicio, data_fim, secretaria, progresso: 0, status: 'planejado', prioridade: 'media' })
+        .select()
+        .single();
+
+      if (error) { console.error('[Planning] Erro ao salvar campanha:', error); }
+      else if (data) {
+        setCampaigns((prev) => [{
+          id: data.id, titulo, data_inicio, data_fim,
+          progresso: 0, status: 'planejado', prioridade: 'media', secretaria,
+        }, ...prev]);
+      }
+    }
+    setIsSaving(false);
+    setIsAdding(false);
+    resetCampaignForm();
+  };
+
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    tenantService.from('enterprise_campanhas').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('[Planning] Erro ao deletar campanha:', error);
+    });
+  };
 
   return (
-    <div className="space-y-10 pb-20">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 pb-20 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Planejamento <span className="text-blue-600">Estratégico</span>
+          <h1 className="text-2xl font-black tracking-tighter text-white">
+            Planejamento <span className="text-brand-accent">Estratégico</span>
           </h1>
-          <p className="text-slate-500 font-medium mt-2">Gestão de campanhas, eventos e marcos institucionais.</p>
+          <p className="text-slate-400 font-medium mt-2">Gestão de campanhas, eventos e marcos institucionais.</p>
         </div>
         <div className="flex gap-4">
           <button 
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+            onClick={handleOpenNewCampaign}
+            className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-[0_10px_30px_rgba(139,92,246,0.3)]"
           >
             <Plus className="w-5 h-5" />
             Nova Campanha
@@ -89,7 +150,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Calendar Sidebar */}
         <div className={cn(
           "lg:col-span-1 p-10 rounded-[3rem] shadow-xl border",
@@ -114,7 +175,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
             {Array.from({ length: 31 }).map((_, i) => (
               <div key={i} className={cn(
                 "aspect-square flex items-center justify-center rounded-xl text-sm font-bold transition-all cursor-pointer",
-                i + 1 === 25 ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "hover:bg-slate-50 text-slate-600"
+                i + 1 === 25 ? "bg-brand-accent text-white shadow-lg shadow-blue-500/20" : "hover:bg-slate-50 text-slate-600"
               )}>
                 {i + 1}
               </div>
@@ -129,7 +190,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
               { title: 'Coletiva de Imprensa', date: '30 Mar', type: 'Imprensa' },
             ].map((event, i) => (
               <div key={i} className="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all cursor-pointer">
-                <div className="w-12 h-12 bg-white border border-slate-100 rounded-xl flex items-center justify-center font-black text-blue-600 shadow-sm">
+                <div className="w-12 h-12 bg-white border border-slate-100 rounded-xl flex items-center justify-center font-black text-brand-accent shadow-sm">
                   {event.date.split(' ')[0]}
                 </div>
                 <div>
@@ -142,7 +203,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
         </div>
 
         {/* Campaign List */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           {campaigns.map((item) => (
             <div key={item.id} className={cn(
               "p-8 rounded-[3rem] shadow-xl border transition-all hover:shadow-2xl group",
@@ -152,7 +213,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
                 <div className="flex items-center gap-6">
                   <div className={cn(
                     "w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-inner",
-                    item.status === 'em_andamento' ? "bg-blue-50 text-blue-600" : 
+                    item.status === 'em_andamento' ? "bg-blue-50 text-brand-accent" : 
                     item.status === 'planejado' ? "bg-slate-50 text-slate-400" : "bg-emerald-50 text-emerald-600"
                   )}>
                     <Flag className="w-8 h-8" />
@@ -162,7 +223,7 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
                         item.prioridade === 'alta' ? "bg-rose-100 text-rose-600" : 
-                        item.prioridade === 'media' ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-blue-600"
+                        item.prioridade === 'media' ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-brand-accent"
                       )}>
                         Prioridade {item.prioridade}
                       </span>
@@ -175,10 +236,10 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
 
                 <div className="flex flex-col items-end gap-4">
                   <div className="flex items-center gap-3">
-                    <button className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all">
+                    <button onClick={() => handleEditCampaign(item)} className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-brand-accent rounded-2xl transition-all">
                       <Edit2 className="w-5 h-5" />
                     </button>
-                    <button className="p-4 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">
+                    <button onClick={() => handleDeleteCampaign(item.id)} className="p-4 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
@@ -225,28 +286,28 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
                 <X className="w-6 h-6 text-slate-400" />
               </button>
               
-              <h2 className="text-4xl font-black mb-10">Nova Campanha</h2>
+              <h2 className="text-3xl font-black mb-10">{editingCampaignId ? 'Editar Campanha' : 'Nova Campanha'}</h2>
               
               <div className="space-y-8 mb-10">
                 <div className="space-y-4">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Título da Campanha</label>
-                  <input type="text" className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" placeholder="Ex: Campanha de Agasalho..." />
+                  <input ref={tituloRef} type="text" value={campaignForm.titulo} onChange={(event) => setCampaignForm((prev) => ({ ...prev, titulo: event.target.value }))} className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" placeholder="Ex: Campanha de Agasalho..." />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Data Início</label>
-                    <input type="date" className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" />
+                    <input type="date" value={campaignForm.data_inicio} onChange={(event) => setCampaignForm((prev) => ({ ...prev, data_inicio: event.target.value }))} className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" />
                   </div>
                   <div className="space-y-4">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Data Fim</label>
-                    <input type="date" className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" />
+                    <input type="date" value={campaignForm.data_fim} onChange={(event) => setCampaignForm((prev) => ({ ...prev, data_fim: event.target.value }))} className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold border-none outline-none" />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Secretaria Responsável</label>
-                  <select className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold text-slate-600 border-none outline-none appearance-none">
+                  <select value={campaignForm.secretaria} onChange={(event) => setCampaignForm((prev) => ({ ...prev, secretaria: event.target.value }))} className="w-full px-8 py-5 bg-slate-50 rounded-2xl font-bold text-slate-600 border-none outline-none appearance-none">
                     <option>Saúde</option>
                     <option>Educação</option>
                     <option>Obras</option>
@@ -256,11 +317,14 @@ export function EnterprisePlanning({ isDarkMode }: { isDarkMode: boolean }) {
               </div>
 
               <div className="flex gap-4">
-                <button className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                  Salvar Campanha
+                <button onClick={handleSaveCampaign} disabled={isSaving} className="flex-1 py-5 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
+                  {isSaving ? 'Salvando...' : editingCampaignId ? 'Atualizar Campanha' : 'Salvar Campanha'}
                 </button>
                 <button 
-                  onClick={() => setIsAdding(false)}
+                  onClick={() => {
+                    setIsAdding(false);
+                    resetCampaignForm();
+                  }}
                   className="px-10 py-5 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
                 >
                   Cancelar

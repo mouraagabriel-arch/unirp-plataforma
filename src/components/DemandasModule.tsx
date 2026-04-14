@@ -67,7 +67,7 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
   const [search, setSearch] = useState('');
 
   const statusColors = {
-    aberto: "bg-blue-100 text-blue-600",
+    aberto: "bg-blue-100 text-brand-accent",
     em_progresso: "bg-amber-100 text-amber-600",
     concluido: "bg-emerald-100 text-emerald-600",
     atrasado: "bg-rose-100 text-rose-600"
@@ -80,11 +80,11 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter">
-            Caixa de <span className="text-blue-600">Entrada</span>
+          <h1 className="text-3xl font-black tracking-tighter">
+            Caixa de <span className="text-brand-accent">Entrada</span>
           </h1>
           <p className="text-slate-500 font-medium mt-1">Gestão centralizada de todas as solicitações e contatos.</p>
         </div>
@@ -103,7 +103,7 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="p-4 bg-brand-accent text-white rounded-2xl hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -117,7 +117,7 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
             className={cn(
               "px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all border",
               filter === s 
-                ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20" 
+                ? "bg-brand-accent text-white border-blue-600 shadow-lg shadow-blue-500/20" 
                 : isDarkMode ? "bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
             )}
           >
@@ -158,7 +158,7 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
                       </span>
                     </div>
                     
-                    <h3 className="text-xl font-black group-hover:text-blue-600 transition-colors">{demanda.titulo}</h3>
+                    <h3 className="text-xl font-black group-hover:text-brand-accent transition-colors">{demanda.titulo}</h3>
                     
                     <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-slate-500">
                       <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export function DemandasModule({ isDarkMode }: { isDarkMode: boolean }) {
                       <MessageSquare className="w-4 h-4" />
                       <span className="text-xs font-bold">3</span>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600 transition-all" />
+                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-accent transition-all" />
                   </div>
                 </div>
               </motion.div>

@@ -11,41 +11,41 @@ import { cn } from '../../lib/utils';
 
 export function EnterprisePlan({ isDarkMode }: { isDarkMode: boolean }) {
   return (
-    <div className="space-y-10 pb-20">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 pb-20 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Meu <span className="text-blue-600">Plano</span>
+          <h1 className="text-2xl font-black tracking-tighter text-white">
+            Meu <span className="text-brand-accent">Plano</span>
           </h1>
-          <p className="text-slate-500 font-medium mt-2">Gestão de assinatura, faturamento e recursos.</p>
+          <p className="text-slate-400 font-medium mt-2">Gestão de assinatura, faturamento e recursos.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="flex items-center gap-3 px-8 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-[0_10px_30px_rgba(139,92,246,0.3)]">
             <ArrowUpRight className="w-5 h-5" />
             Fazer Upgrade
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Current Plan Card */}
         <div className={cn(
-          "lg:col-span-2 p-12 rounded-[4rem] shadow-2xl border relative overflow-hidden",
+          "lg:col-span-1 p-12 rounded-[4rem] shadow-2xl border relative overflow-hidden",
           isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-50"
         )}>
           <div className="absolute top-0 right-0 p-12 opacity-5">
-            <Zap className="w-64 h-64 text-blue-600" />
+            <Zap className="w-64 h-64 text-brand-accent" />
           </div>
           
           <div className="relative z-10 space-y-12">
             <div className="flex items-center justify-between">
               <div>
-                <span className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-black uppercase tracking-widest">Plano Atual</span>
-                <h2 className="text-5xl font-black tracking-tighter mt-4">Enterprise <span className="text-blue-600">Premium</span></h2>
+                <span className="px-4 py-2 bg-blue-50 text-brand-accent rounded-xl text-xs font-black uppercase tracking-widest">Plano Atual</span>
+                <h2 className="text-2xl font-black tracking-tighter mt-4">Enterprise <span className="text-brand-accent">Premium</span></h2>
               </div>
               <div className="text-right">
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Próxima Fatura</p>
-                <p className="text-3xl font-black">R$ 4.990,00</p>
+                <p className="text-xl font-bold">R$ 4.990,00</p>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Vencimento: 10 Abr, 2024</p>
               </div>
             </div>
@@ -68,7 +68,7 @@ export function EnterprisePlan({ isDarkMode }: { isDarkMode: boolean }) {
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${stat.progress}%` }}
-                      className="h-full bg-blue-600 rounded-full transition-all"
+                      className="h-full bg-brand-accent rounded-full transition-all"
                     />
                   </div>
                 </div>
@@ -86,7 +86,7 @@ export function EnterprisePlan({ isDarkMode }: { isDarkMode: boolean }) {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-50 text-brand-accent rounded-2xl flex items-center justify-center">
                   <Star className="w-6 h-6" />
                 </div>
                 <div>
@@ -126,7 +126,7 @@ export function EnterprisePlan({ isDarkMode }: { isDarkMode: boolean }) {
                   <span className="px-2 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
                     {invoice.status}
                   </span>
-                  <button className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 group-hover:text-blue-600">
+                  <button className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 group-hover:text-brand-accent">
                     <Download className="w-4 h-4" />
                   </button>
                 </div>

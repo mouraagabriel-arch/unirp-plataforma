@@ -151,3 +151,19 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_perfil_agencia_modtime BEFORE UPDATE ON perfil_agencia FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_workflow_cards_modtime BEFORE UPDATE ON workflow_cards FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+-- ==========================================
+-- ENTERPRISE CRM - JORNALISTAS
+-- ==========================================
+CREATE TABLE enterprise_jornalistas (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    nome text NOT NULL,
+    veiculo text,
+    cargo text,
+    email text,
+    telefone text,
+    regiao text,
+    tags text[],
+    status text DEFAULT 'ativo',
+    created_at timestamptz DEFAULT now()
+);

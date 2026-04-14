@@ -49,6 +49,12 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
   const [news, setNews] = useState<NewsItem[]>(MOCK_NEWS);
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [generatingNoteId, setGeneratingNoteId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const notify = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 2200);
+  };
 
   const analyzeSentiment = async (item: NewsItem) => {
     setAnalyzingId(item.id);
@@ -101,10 +107,10 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">Clipping & <span className="text-rose-600">Gestão de Crise</span></h1>
+          <h1 className="text-2xl font-black tracking-tighter">Clipping & <span className="text-rose-600">Gestão de Crise</span></h1>
           <p className="text-slate-500 font-medium mt-2">Monitoramento inteligente de menções e análise de sentimento via IA.</p>
         </div>
         <div className="flex gap-4">
@@ -119,9 +125,9 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* News Feed */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           {news.map((item) => (
             <motion.div 
               key={item.id}
@@ -161,7 +167,7 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
                   <button 
                     onClick={() => analyzeSentiment(item)}
                     disabled={analyzingId === item.id}
-                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-50 text-brand-accent rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-accent hover:text-white transition-all flex items-center gap-2"
                   >
                     {analyzingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Analisar IA
@@ -180,7 +186,7 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
                     animate={{ height: 'auto', opacity: 1 }}
                     className="mb-6 p-6 bg-slate-50 rounded-3xl border border-slate-100"
                   >
-                    <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
+                    <div className="flex items-center gap-2 text-brand-accent font-bold text-xs uppercase tracking-widest mb-2">
                       <Sparkles className="w-4 h-4" />
                       Análise de Impacto
                     </div>
@@ -225,7 +231,7 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
                         <FileText className="w-4 h-4" />
                         Sugestão de Nota Oficial
                       </div>
-                      <button className="p-2 hover:bg-white/10 rounded-xl transition-all">
+                      <button onClick={() => notify('Nota oficial compartilhada com o gabinete.')} className="p-2 hover:bg-white/10 rounded-xl transition-all">
                         <Share2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -233,10 +239,10 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
                       "{item.officialNote}"
                     </p>
                     <div className="flex gap-4 pt-4">
-                      <button className="flex-1 py-4 bg-blue-600 rounded-2xl font-bold hover:bg-blue-700 transition-all">
+                      <button onClick={() => notify('Nota oficial aprovada e preparada para publicação.')} className="flex-1 py-4 bg-brand-accent rounded-2xl font-bold hover:bg-brand-accent/90 transition-all">
                         Aprovar e Publicar
                       </button>
-                      <button className="px-6 py-4 bg-white/10 rounded-2xl font-bold hover:bg-white/20 transition-all">
+                      <button onClick={() => notify('Editor de nota oficial aberto para ajustes.')} className="px-6 py-4 bg-white/10 rounded-2xl font-bold hover:bg-white/20 transition-all">
                         Editar
                       </button>
                     </div>
@@ -269,12 +275,25 @@ export function ClippingModule({ isDarkMode }: { isDarkMode: boolean }) {
             <p className="text-blue-100 font-medium leading-relaxed mb-6">
               O sentimento geral subiu 12% após o anúncio do programa TechRP. No entanto, a paralisação das obras na Praça Central é o principal detrator hoje.
             </p>
-            <button className="w-full py-4 bg-white text-blue-600 rounded-2xl font-bold hover:bg-blue-50 transition-all">
+            <button onClick={() => notify('Relatório completo aberto no painel de análises.')} className="w-full py-4 bg-white text-brand-accent rounded-2xl font-bold hover:bg-blue-50 transition-all">
               Ver Relatório Completo
             </button>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="fixed bottom-6 right-6 z-50 rounded-xl border border-white/10 bg-slate-900/90 px-4 py-3 text-sm font-bold text-white shadow-xl"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

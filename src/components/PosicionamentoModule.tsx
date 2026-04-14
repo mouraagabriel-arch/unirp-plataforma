@@ -42,6 +42,12 @@ const POSICIONAMENTOS_MOCK: Posicionamento[] = [
 export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
   const [posicionamentos, setPosicionamentos] = useState<Posicionamento[]>(POSICIONAMENTOS_MOCK);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const notify = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 2200);
+  };
 
   const generateAIPosition = async (item: Posicionamento) => {
     setGeneratingId(item.id);
@@ -63,15 +69,15 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Central de <span className="text-blue-600">Posicionamento</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            Central de <span className="text-brand-accent">Posicionamento</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Gestão de narrativas e comunicados oficiais da gestão.</p>
         </div>
-        <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+        <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
           <Plus className="w-5 h-5" />
           Novo Posicionamento
         </button>
@@ -90,7 +96,7 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
             )}
           >
             <div className="flex flex-col lg:flex-row lg:items-center gap-8">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
+              <div className="w-16 h-16 bg-blue-50 text-brand-accent rounded-2xl flex items-center justify-center shrink-0">
                 <MessageCircle className="w-8 h-8" />
               </div>
               
@@ -115,7 +121,7 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
                   <button 
                     onClick={() => generateAIPosition(item)}
                     disabled={generatingId === item.id}
-                    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-brand-accent hover:text-white transition-all flex items-center gap-2"
                   >
                     {generatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Gerar com IA
@@ -135,15 +141,15 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
                   className="mt-8 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-6"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-brand-accent font-bold text-xs uppercase tracking-widest">
                       <Sparkles className="w-4 h-4" />
                       Sugestão de Posicionamento (IA)
                     </div>
                     <div className="flex gap-2">
-                      <button className="p-3 hover:bg-white rounded-xl transition-all">
+                      <button onClick={() => notify('Posicionamento compartilhado com a equipe.')} className="p-3 hover:bg-white rounded-xl transition-all">
                         <Share2 className="w-4 h-4 text-slate-400" />
                       </button>
-                      <button className="p-3 hover:bg-white rounded-xl transition-all">
+                      <button onClick={() => notify('Rascunho exportado para revisão.')} className="p-3 hover:bg-white rounded-xl transition-all">
                         <FileText className="w-4 h-4 text-slate-400" />
                       </button>
                     </div>
@@ -152,10 +158,10 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
                     "{item.conteudo}"
                   </p>
                   <div className="flex gap-4 pt-4">
-                    <button className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                    <button onClick={() => notify('Fluxo acionado: Posicionamento aprovado e publicado.')} className="flex-1 py-5 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
                       Aprovar e Publicar
                     </button>
-                    <button className="px-8 py-5 bg-white border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all">
+                    <button onClick={() => notify('Editor de rascunho aberto para ajustes.')} className="px-8 py-5 bg-white border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all">
                       Editar Rascunho
                     </button>
                   </div>
@@ -165,6 +171,19 @@ export function PosicionamentoModule({ isDarkMode }: { isDarkMode: boolean }) {
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="fixed bottom-6 right-6 z-50 rounded-xl border border-white/10 bg-slate-900/90 px-4 py-3 text-sm font-bold text-white shadow-xl"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

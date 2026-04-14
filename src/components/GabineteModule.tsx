@@ -3,13 +3,13 @@ import { GabineteDashboard } from './gabinete/GabineteDashboard';
 import { GabineteInbox } from './gabinete/GabineteInbox';
 import { GabineteProjetos } from './gabinete/GabineteProjetos';
 import { GabineteArsenal } from './gabinete/GabineteArsenal';
-import { GabinetePosicionamento } from './gabinete/GabinetePosicionamento';
 import { GabineteIdeologia } from './gabinete/GabineteIdeologia';
 import { GabineteHub } from './gabinete/GabineteHub';
 import { GabineteCidadaos } from './gabinete/GabineteCidadaos';
 import { GabinetePlanejamento } from './gabinete/GabinetePlanejamento';
 import { GabineteWorkflow } from './gabinete/GabineteWorkflow';
 import { GabinetePlan } from './gabinete/GabinetePlan';
+import { GabineteTransparenciaRecursos } from './gabinete/GabineteTransparenciaRecursos';
 
 interface GabineteModuleProps {
   activeTab: string;
@@ -25,10 +25,11 @@ export function GabineteModule({ activeTab, isDarkMode }: GabineteModuleProps) {
         return <GabineteInbox isDarkMode={isDarkMode} />;
       case 'projetos':
         return <GabineteProjetos isDarkMode={isDarkMode} />;
+      case 'transparencia':
+        return <GabineteTransparenciaRecursos isDarkMode={isDarkMode} />;
       case 'arsenal':
         return <GabineteArsenal isDarkMode={isDarkMode} />;
       case 'posicionamento':
-        return <GabinetePosicionamento isDarkMode={isDarkMode} />;
       case 'cerebro':
         return <GabineteIdeologia isDarkMode={isDarkMode} />;
       case 'hub':
@@ -47,7 +48,7 @@ export function GabineteModule({ activeTab, isDarkMode }: GabineteModuleProps) {
   };
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full max-w-7xl mx-auto px-4">
       {renderContent()}
     </div>
   );

@@ -60,16 +60,16 @@ export function HubModule({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Hub de <span className="text-blue-600">Conteúdo</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            Hub de <span className="text-brand-accent">Conteúdo</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Criação, gestão e distribuição de conteúdo institucional.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
             <Plus className="w-5 h-5" />
             Novo Conteúdo
           </button>
@@ -87,7 +87,7 @@ export function HubModule({ isDarkMode }: { isDarkMode: boolean }) {
             )}
           >
             <div className="flex flex-col lg:flex-row lg:items-start gap-8">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
+              <div className="w-16 h-16 bg-blue-50 text-brand-accent rounded-2xl flex items-center justify-center shrink-0">
                 <Newspaper className="w-8 h-8" />
               </div>
               
@@ -108,18 +108,18 @@ export function HubModule({ isDarkMode }: { isDarkMode: boolean }) {
                 <p className="text-slate-500 font-medium leading-relaxed">{item.conteudo}</p>
                 
                 <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-100">
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold text-xs uppercase tracking-widest transition-all">
+                  <button className="flex items-center gap-2 text-slate-400 hover:text-brand-accent font-bold text-xs uppercase tracking-widest transition-all">
                     <ImageIcon className="w-4 h-4" />
                     Adicionar Mídia
                   </button>
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold text-xs uppercase tracking-widest transition-all">
+                  <button className="flex items-center gap-2 text-slate-400 hover:text-brand-accent font-bold text-xs uppercase tracking-widest transition-all">
                     <Share2 className="w-4 h-4" />
                     Compartilhar
                   </button>
                   <button 
                     onClick={() => generateAIContent(item)}
                     disabled={generatingId === item.id}
-                    className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-2 text-brand-accent font-bold text-xs uppercase tracking-widest hover:underline"
                   >
                     {generatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Refinar com IA
@@ -128,7 +128,7 @@ export function HubModule({ isDarkMode }: { isDarkMode: boolean }) {
               </div>
 
               <div className="flex items-center gap-3 lg:pl-8 lg:border-l border-slate-100">
-                <button className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all">
+                <button className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-brand-accent rounded-2xl transition-all">
                   <Edit2 className="w-5 h-5" />
                 </button>
                 <button className="p-4 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">

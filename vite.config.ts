@@ -7,14 +7,21 @@ import {defineConfig, loadEnv} from 'vite';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, '.', '');
+  // loadEnv(mode, dir, prefix='') carrega TODAS as vars do .env (prefix vazio = sem filtro)
+  // O segundo argumento DEVE ser o diretório absoluto da raiz do projeto
+  const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.SUPABASE_URL),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY),
+      // GEMINI_API_KEY não tem prefixo VITE_, então não é exposta automaticamente pelo Vite.
+      // O define abaixo injeta o valor em código que usa process.env.GEMINI_API_KEY.
+      // Lê VITE_GEMINI_API_KEY (preferencial) com fallback para GEMINI_API_KEY.
+      'process.env.GEMINI_API_KEY': JSON.stringify(
+        env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || ''
+      ),
+      // NÃO defina import.meta.env.VITE_* manualmente — o Vite já expõe variáveis
+      // com prefixo VITE_ nativas via import.meta.env. Fazê-lo aqui causa conflito
+      // e sobrescreve com undefined quando o nome da chave está errado no .env.
     },
     resolve: {
       alias: {

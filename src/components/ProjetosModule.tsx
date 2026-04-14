@@ -56,23 +56,23 @@ export function ProjetosModule({ isDarkMode }: { isDarkMode: boolean }) {
   const [filter, setFilter] = useState('todos');
 
   const statusColors = {
-    em_analise: "bg-blue-100 text-blue-600",
+    em_analise: "bg-blue-100 text-brand-accent",
     aprovado: "bg-emerald-100 text-emerald-600",
     rejeitado: "bg-rose-100 text-rose-600",
     arquivado: "bg-slate-100 text-slate-600"
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter">
-            Análise de <span className="text-blue-600">Projetos</span>
+          <h1 className="text-3xl font-black tracking-tighter">
+            Análise de <span className="text-brand-accent">Projetos</span>
           </h1>
           <p className="text-slate-500 font-medium mt-1">Monitoramento e análise técnica de proposições legislativas.</p>
         </div>
         
-        <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+        <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
           <Plus className="w-5 h-5" />
           <span>Novo Projeto</span>
         </button>
@@ -81,21 +81,21 @@ export function ProjetosModule({ isDarkMode }: { isDarkMode: boolean }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className={cn("p-8 rounded-[2rem] border", isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100")}>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total de Projetos</p>
-          <p className="text-3xl font-black">124</p>
+          <p className="text-xl font-bold">124</p>
           <div className="mt-4 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full w-3/4 bg-blue-500" />
           </div>
         </div>
         <div className={cn("p-8 rounded-[2rem] border", isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100")}>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Aprovados (Mês)</p>
-          <p className="text-3xl font-black text-emerald-600">12</p>
+          <p className="text-xl font-bold text-emerald-600">12</p>
           <div className="mt-4 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full w-1/2 bg-emerald-500" />
           </div>
         </div>
         <div className={cn("p-8 rounded-[2rem] border", isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100")}>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Em Análise</p>
-          <p className="text-3xl font-black text-amber-600">08</p>
+          <p className="text-xl font-bold text-amber-600">08</p>
           <div className="mt-4 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full w-1/4 bg-amber-500" />
           </div>
@@ -115,7 +115,7 @@ export function ProjetosModule({ isDarkMode }: { isDarkMode: boolean }) {
             )}
           >
             <div className="flex flex-col lg:flex-row lg:items-center gap-8">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-brand-accent transition-all">
                 <FileText className="w-8 h-8" />
               </div>
               
@@ -140,7 +140,7 @@ export function ProjetosModule({ isDarkMode }: { isDarkMode: boolean }) {
                     projeto.impacto === 'alto' ? "text-rose-600" : "text-amber-600"
                   )}>{projeto.impacto}</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600 transition-all" />
+                <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-accent transition-all" />
               </div>
             </div>
           </motion.div>

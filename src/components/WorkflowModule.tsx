@@ -42,22 +42,22 @@ export function WorkflowModule({ isDarkMode }: { isDarkMode: boolean }) {
 
   const statusColors = {
     pendente: "bg-slate-100 text-slate-600",
-    em_progresso: "bg-blue-100 text-blue-600",
+    em_progresso: "bg-blue-100 text-brand-accent",
     concluido: "bg-emerald-100 text-emerald-600",
     atrasado: "bg-rose-100 text-rose-600"
   };
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Workflow & <span className="text-blue-600">Pautas</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            Workflow & <span className="text-brand-accent">Pautas</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Gestão de tarefas e fluxo de trabalho da equipe.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
             <Plus className="w-5 h-5" />
             Nova Tarefa
           </button>
@@ -77,7 +77,7 @@ export function WorkflowModule({ isDarkMode }: { isDarkMode: boolean }) {
             )}
           >
             <div className="flex flex-col lg:flex-row lg:items-center gap-8">
-              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-brand-accent transition-all">
                 <CheckSquare className="w-6 h-6" />
               </div>
               
@@ -90,7 +90,7 @@ export function WorkflowModule({ isDarkMode }: { isDarkMode: boolean }) {
                     {task.id}
                   </span>
                 </div>
-                <h3 className="text-xl font-black group-hover:text-blue-600 transition-colors">{task.titulo}</h3>
+                <h3 className="text-xl font-black group-hover:text-brand-accent transition-colors">{task.titulo}</h3>
                 
                 <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-slate-500">
                   <div className="flex items-center gap-2">
@@ -105,13 +105,13 @@ export function WorkflowModule({ isDarkMode }: { isDarkMode: boolean }) {
               </div>
 
               <div className="flex items-center gap-4 lg:pl-8 lg:border-l border-slate-100">
-                <button className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all">
+                <button className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-brand-accent rounded-2xl transition-all">
                   <Edit2 className="w-5 h-5" />
                 </button>
                 <button className="p-4 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">
                   <Trash2 className="w-5 h-5" />
                 </button>
-                <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600 transition-all" />
+                <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-accent transition-all" />
               </div>
             </div>
           </motion.div>

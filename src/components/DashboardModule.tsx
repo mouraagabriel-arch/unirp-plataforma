@@ -31,45 +31,45 @@ const EVOLUTION_DATA = [
 
 export function DashboardModule({ isDarkMode }: { isDarkMode: boolean }) {
   return (
-    <div className="space-y-10">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Visão <span className="text-blue-600">Estratégica</span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            Visão <span className="text-brand-accent">Estratégica</span>
           </h1>
-          <p className="text-slate-500 font-medium mt-2">Dados consolidados de todas as frentes da gestão.</p>
+          <p className="text-sm sm:text-base text-slate-500 font-medium mt-2 max-w-2xl">Dados consolidados de todas as frentes da gestão.</p>
         </div>
-        <div className="flex gap-4">
-          <button className="px-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all shadow-sm">
+        <div className="flex gap-3">
+          <button className="px-4 py-2 text-sm sm:text-base font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition transform duration-200">
             Exportar Relatório
           </button>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Demandas Ativas" value="24" icon={<Inbox className="w-6 h-6" />} color="blue" />
-        <StatCard title="Menções Hoje" value="156" icon={<Globe className="w-6 h-6" />} color="emerald" />
-        <StatCard title="Projetos em Análise" value="08" icon={<FileSearch className="w-6 h-6" />} color="amber" />
-        <StatCard title="Saúde do Mandato" value="92%" icon={<TrendingUp className="w-6 h-6" />} color="indigo" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard title="Demandas Ativas" value="24" icon={<Inbox className="w-5 h-5" />} color="blue" />
+        <StatCard title="Menções Hoje" value="156" icon={<Globe className="w-5 h-5" />} color="emerald" />
+        <StatCard title="Projetos em Análise" value="08" icon={<FileSearch className="w-5 h-5" />} color="amber" />
+        <StatCard title="Saúde do Mandato" value="92%" icon={<TrendingUp className="w-5 h-5" />} color="indigo" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sentiment Chart */}
         <div className={cn(
-          "p-10 rounded-[2.5rem] shadow-xl flex flex-col",
+          "flex flex-col rounded-2xl border border-slate-100 shadow-sm p-6",
           isDarkMode ? "bg-slate-900" : "bg-white"
         )}>
-          <h3 className="text-2xl font-black mb-8">Sentimento da Mídia</h3>
-          <div className="h-64 w-full">
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">Sentimento da Mídia</h3>
+          <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={SENTIMENT_DATA}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={8}
+                  innerRadius={48}
+                  outerRadius={70}
+                  paddingAngle={6}
                   dataKey="value"
                 >
                   {SENTIMENT_DATA.map((entry, index) => (
@@ -79,23 +79,23 @@ export function DashboardModule({ isDarkMode }: { isDarkMode: boolean }) {
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Legend verticalAlign="bottom" height={36}/>
+                <Legend verticalAlign="bottom" height={30} />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Insight Principal</p>
-            <p className="text-sm font-medium text-slate-700">Aprovação em alta devido ao programa TechRP.</p>
+          <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Insight Principal</p>
+            <p className="text-sm font-medium text-slate-700 mt-1">Aprovação em alta devido ao programa TechRP.</p>
           </div>
         </div>
 
         {/* Evolution Chart */}
         <div className={cn(
-          "lg:col-span-2 p-10 rounded-[2.5rem] shadow-xl flex flex-col",
+          "lg:col-span-1 flex flex-col rounded-2xl border border-slate-100 shadow-sm p-6",
           isDarkMode ? "bg-slate-900" : "bg-white"
         )}>
-          <h3 className="text-2xl font-black mb-8">Evolução Semanal</h3>
-          <div className="h-64 w-full">
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">Evolução Semanal</h3>
+          <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={EVOLUTION_DATA}>
                 <defs>
@@ -105,59 +105,59 @@ export function DashboardModule({ isDarkMode }: { isDarkMode: boolean }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 600, fill: '#94a3b8'}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 600, fill: '#94a3b8'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 600, fill: '#94a3b8'}} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Area type="monotone" dataKey="mencoes" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorMencoes)" />
+                <Area type="monotone" dataKey="mencoes" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorMencoes)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-100">
-            <div className="flex gap-8">
+          <div className="mt-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-5 border-t border-slate-100">
+            <div className="flex gap-6">
               <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Média Diária</p>
-                <p className="text-xl font-black">46.8</p>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Média Diária</p>
+                <p className="text-lg font-extrabold">46.8</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pico Semanal</p>
-                <p className="text-xl font-black text-blue-600">61</p>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Pico Semanal</p>
+                <p className="text-lg font-extrabold text-brand-accent">61</p>
               </div>
             </div>
-            <button className="text-blue-600 font-bold text-sm hover:underline">Ver Detalhes</button>
+            <button className="text-brand-accent font-semibold text-sm hover:text-blue-800 hover:underline transition">Ver Detalhes</button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={cn(
-          "lg:col-span-2 p-10 rounded-[2.5rem] shadow-xl",
+          "lg:col-span-1 flex flex-col rounded-2xl border border-slate-100 shadow-sm p-6",
           isDarkMode ? "bg-slate-900" : "bg-white"
         )}>
-          <h3 className="text-2xl font-black mb-6">Atividade Recente</h3>
-          <div className="space-y-6">
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">Atividade Recente</h3>
+          <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-6 p-4 rounded-3xl hover:bg-slate-50 transition-all cursor-pointer group">
-                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">
-                  <FileText className="w-5 h-5" />
+              <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 group-hover:bg-blue-100 group-hover:text-brand-accent transition-all">
+                  <FileText className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold">Novo release gerado: "Inauguração da Praça Central"</p>
+                  <p className="font-semibold text-sm">Novo release gerado: "Inauguração da Praça Central"</p>
                   <p className="text-xs text-slate-400 font-medium">Há 2 horas • Por Inteligência Artificial</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-all" />
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-brand-accent transition-all" />
               </div>
             ))}
           </div>
         </div>
 
         <div className={cn(
-          "p-10 rounded-[2.5rem] shadow-xl",
+          "flex flex-col rounded-2xl border border-slate-100 shadow-sm p-6",
           isDarkMode ? "bg-slate-900" : "bg-white"
         )}>
-          <h3 className="text-2xl font-black mb-6">Status de Demandas</h3>
-          <div className="space-y-6">
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">Status de Demandas</h3>
+          <div className="space-y-4">
             <StatusItem label="Em Aberto" value={12} total={24} color="blue" icon={<Clock className="w-4 h-4" />} />
             <StatusItem label="Em Execução" value={8} total={24} color="amber" icon={<Activity className="w-4 h-4" />} />
             <StatusItem label="Concluídas" value={4} total={24} color="emerald" icon={<CheckCircle2 className="w-4 h-4" />} />
@@ -182,7 +182,7 @@ function StatusItem({ label, value, total, color, icon }: { label: string, value
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", 
-            color === 'blue' ? "bg-blue-50 text-blue-600" :
+            color === 'blue' ? "bg-blue-50 text-brand-accent" :
             color === 'amber' ? "bg-amber-50 text-amber-600" :
             "bg-emerald-50 text-emerald-600"
           )}>

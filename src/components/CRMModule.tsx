@@ -44,16 +44,16 @@ export function CRMModule({ isDarkMode, label }: { isDarkMode: boolean, label: s
   const [search, setSearch] = useState('');
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            {label.split(' ')[0]} <span className="text-blue-600">{label.split(' ')[1]}</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            {label.split(' ')[0]} <span className="text-brand-accent">{label.split(' ')[1]}</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Gestão de contatos, cidadãos e influenciadores.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
             <Plus className="w-5 h-5" />
             Novo Contato
           </button>
@@ -96,14 +96,14 @@ export function CRMModule({ isDarkMode, label }: { isDarkMode: boolean, label: s
           >
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl">
+                <div className="w-16 h-16 bg-blue-50 text-brand-accent rounded-2xl flex items-center justify-center font-black text-xl">
                   {contact.nome.charAt(0)}
                 </div>
                 <div>
                   <h3 className="text-2xl font-black">{contact.nome}</h3>
                   <span className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                    contact.tipo === 'cidadao' ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
+                    contact.tipo === 'cidadao' ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-brand-accent"
                   )}>
                     {contact.tipo}
                   </span>
@@ -138,7 +138,7 @@ export function CRMModule({ isDarkMode, label }: { isDarkMode: boolean, label: s
             </div>
 
             <div className="flex gap-4 mt-8 pt-8 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-all">
-              <button className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all">
+              <button className="flex-1 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all">
                 Ver Perfil
               </button>
               <button className="px-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all">

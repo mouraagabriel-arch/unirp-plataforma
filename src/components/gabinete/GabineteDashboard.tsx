@@ -1,17 +1,20 @@
-import { useState } from 'react';
-import { 
-  BarChart3, TrendingUp, AlertCircle, 
-  Users, Activity, MapPin, 
+import { useEffect, useState, type FormEvent } from 'react';
+import {
+  BarChart3, TrendingUp, AlertCircle,
+  Users, Activity, MapPin,
   MessageSquare, Calendar, ChevronRight,
   ArrowUpRight, ArrowDownRight, Zap,
-  ThumbsUp, ThumbsDown, Landmark
+  ThumbsUp, ThumbsDown, Landmark, CheckCircle2
 } from 'lucide-react';
-import { 
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart as RePie, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
+import { useTenantService } from '../../services/useTenantService';
+import { useTerminologia } from '../../hooks/useTerminologia';
 
 const APPROVAL_DATA = [
   { name: 'Aprovação', value: 72, color: '#10b981' },
@@ -36,368 +39,532 @@ const POPULARITY_HISTORY = [
   { month: 'Mar', approval: 72 },
 ];
 
+const MANDATE_TOOLS = [
+  { label: 'Monitoramento em Tempo Real', icon: TrendingUp, route: '/gabinete/clipping' },
+  { label: 'Ouvidoria', icon: MessageSquare, route: '/gabinete/inbox' },
+  { label: 'Interação com Base Local', icon: Users, route: '/gabinete/cidadaos' },
+  { label: 'Análise de Propostas', icon: BarChart3, route: '/gabinete/ideologia' },
+  { label: 'Análise de Emendas Parlamentares', icon: MapPin, route: '/gabinete/transparencia' },
+  { label: 'Plano de Ação', icon: Calendar, route: '/gabinete/planejamento' },
+  { label: 'Geração de Releases', icon: Zap, route: '/gabinete/hub' },
+  { label: 'Relatórios e Transparência', icon: Activity, route: '/gabinete/transparencia' },
+  { label: 'Publicação Automática', icon: ArrowUpRight, route: '/gabinete/hub' },
+];
+
+const INITIAL_PENDING_APPROVALS = [
+  { id: 1, title: 'Parecer Jurídico - Lei nº 432', status: 'Aguardando' },
+  { id: 2, title: 'Orçamento 2024 - Saúde', status: 'Em Análise' },
+  { id: 3, title: 'Autorização Contratação', status: 'Pendente' },
+];
+
+const URGENT_ALERTS = [
+  {
+    id: 1,
+    title: 'Taxa de Lixo',
+    severity: 'Crítica',
+    time: 'Votação amanhã',
+    details: 'Risco alto de repercussão negativa. Necessário preparar posicionamento e alinhar base antes da votação.',
+  },
+  {
+    id: 2,
+    title: 'Manifestação Anunciada',
+    severity: 'Alta',
+    time: 'Próximo sábado',
+    details: 'Evento com previsão de presença expressiva em frente à Câmara. Recomendado plano de contingência e equipe de resposta.',
+  },
+  {
+    id: 3,
+    title: 'Queda de Aprovação Regional',
+    severity: 'Média',
+    time: 'Últimas 48h',
+    details: 'Variação de sentimento em bairros-chave. Priorizar visitas locais, comunicado público e reforço de entregas.',
+  },
+];
+
 export function GabineteDashboard({ isDarkMode }: { isDarkMode: boolean }) {
+  const navigate = useNavigate();
+  const tenantService = useTenantService();
+  const { termo } = useTerminologia();
+  const termoPlural = termo('cidadaos');
+  const [showNewReleaseModal, setShowNewReleaseModal] = useState(false);
+  const [showNewCitizenModal, setShowNewCitizenModal] = useState(false);
+  const [showNewPautaModal, setShowNewPautaModal] = useState(false);
+  const [isSavingRelease, setIsSavingRelease] = useState(false);
+  const [isSavingCitizen, setIsSavingCitizen] = useState(false);
+  const [isSavingPauta, setIsSavingPauta] = useState(false);
+  const [releaseForm, setReleaseForm] = useState({ title: '', content: '', date: '' });
+  const [citizenForm, setCitizenForm] = useState({ name: '', neighborhood: '', contact: '' });
+  const [pautaForm, setPautaForm] = useState({ title: '', description: '', date: '' });
+  const [pendingApprovals, setPendingApprovals] = useState(INITIAL_PENDING_APPROVALS);
+  const [selectedAlert, setSelectedAlert] = useState<(typeof URGENT_ALERTS)[number] | null>(null);
+  const [topBairros, setTopBairros] = useState<Array<{ bairro: string; total: number }>>([]);
+
+  useEffect(() => {
+    const loadHeatmap = async () => {
+      const { data, error } = await tenantService.getDemandasHeatByBairro(5);
+      if (error) {
+        console.error('[GabineteDashboard] Erro ao carregar mapa de calor:', error);
+        return;
+      }
+      setTopBairros(data ?? []);
+    };
+
+    void loadHeatmap();
+  }, [tenantService]);
+
+  const handleCreateRelease = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSavingRelease(true);
+
+    const { error } = await tenantService.from('gabinete_hub_conteudos').insert({
+      titulo: releaseForm.title,
+      conteudo: releaseForm.content,
+      data: releaseForm.date,
+    });
+
+    setIsSavingRelease(false);
+
+    if (error) {
+      alert(`Erro ao salvar release: ${error.message}`);
+      return;
+    }
+
+    setReleaseForm({ title: '', content: '', date: '' });
+    setShowNewReleaseModal(false);
+    alert('Release criado com sucesso!');
+  };
+
+  const handleCreateCitizen = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSavingCitizen(true);
+
+    const { error } = await tenantService.from('gabinete_cidadaos').insert({
+      nome: citizenForm.name,
+      bairro: citizenForm.neighborhood,
+      contato: citizenForm.contact,
+    });
+
+    setIsSavingCitizen(false);
+
+    if (error) {
+      alert(`Erro ao salvar ${termo('cidadao').toLowerCase()}: ${error.message}`);
+      return;
+    }
+
+    setCitizenForm({ name: '', neighborhood: '', contact: '' });
+    setShowNewCitizenModal(false);
+    alert(`${termo('cidadao')} adicionado com sucesso!`);
+  };
+
+  const handleCreatePauta = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSavingPauta(true);
+
+    const { error } = await tenantService.from('gabinete_workflow_tarefas').insert({
+      titulo: pautaForm.title,
+      descricao: pautaForm.description,
+      data: pautaForm.date,
+    });
+
+    setIsSavingPauta(false);
+
+    if (error) {
+      alert(`Erro ao salvar pauta: ${error.message}`);
+      return;
+    }
+
+    setPautaForm({ title: '', description: '', date: '' });
+    setShowNewPautaModal(false);
+    alert('Pauta criada com sucesso!');
+  };
+
+  const handleApprovalAction = (id: number, action: 'Aprovar' | 'Rejeitar') => {
+    setPendingApprovals((current) => current.filter((item) => item.id !== id));
+    alert(`Item ${action.toLowerCase()} com sucesso.`);
+  };
+
   return (
-    <div className="space-y-12 pb-20 overflow-x-hidden min-h-full">
-      {/* Header com Termômetro e Alertas */}
-      <div className="flex flex-col lg:flex-row gap-10 items-start">
-        <div className="flex-1">
-          <motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-6xl font-black tracking-tighter leading-none text-white"
-          >
-            Painel <span className="text-brand-accent underline decoration-brand-accent/30 decoration-8 underline-offset-8">Central</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-slate-500 font-bold mt-8 text-xl max-w-2xl leading-relaxed"
-          >
-            Monitoramento em tempo real da performance política, aprovação popular e gestão de demandas territoriais com inteligência preditiva.
-          </motion.p>
-        </div>
-        
-        <div className="flex flex-wrap gap-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-6 px-10 py-8 glass-card neon-glow-emerald border-brand-emerald/20"
-          >
-            <div className="w-14 h-14 bg-brand-emerald/20 border border-brand-emerald/30 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-              <TrendingUp className="w-7 h-7 text-brand-emerald" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-brand-emerald uppercase tracking-[0.2em] mb-1">Aprovação</p>
-              <p className="text-4xl font-black text-white leading-none">72%</p>
-              <p className="text-[10px] font-bold text-brand-emerald/70 mt-2 flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3" /> 2.4% este mês
-              </p>
-            </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center gap-6 px-10 py-8 glass-card neon-glow-rose border-brand-rose/20"
-          >
-            <div className="w-14 h-14 bg-brand-rose/20 border border-brand-rose/30 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(244,63,94,0.2)]">
-              <AlertCircle className="w-7 h-7 text-brand-rose" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-brand-rose uppercase tracking-[0.2em] mb-1">Risco Crise</p>
-              <p className="text-2xl font-black text-white leading-tight">Taxa do Lixo</p>
-              <p className="text-[10px] font-bold text-brand-rose/70 mt-2">Votação amanhã</p>
-            </div>
-          </motion.div>
+    <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col gap-6 overflow-x-hidden">
+      {/* Cabeçalho Superior com Título e Atalhos Rápidos */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <h1 className="text-2xl font-bold text-white">Estação de Comando - Gabinete</h1>
+        <div className="flex flex-wrap gap-3">
+          <button onClick={() => setShowNewReleaseModal(true)} className="bg-brand-accent text-white px-4 py-2 text-sm rounded-lg hover:bg-brand-accent/90 transition-all shadow-sm">
+            Novo Release
+          </button>
+          <button onClick={() => setShowNewCitizenModal(true)} className="bg-brand-accent text-white px-4 py-2 text-sm rounded-lg hover:bg-brand-accent/90 transition-all shadow-sm">
+            Adicionar {termo('cidadao')}
+          </button>
+          <button onClick={() => setShowNewPautaModal(true)} className="bg-brand-accent text-white px-4 py-2 text-sm rounded-lg hover:bg-brand-accent/90 transition-all shadow-sm">
+            Nova Pauta
+          </button>
         </div>
       </div>
 
-      {/* Stats Grid - More Political Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Lâmina de Tempo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
-          { label: 'Base Eleitoral', value: '18.4K', trend: '+450', up: true, icon: Users, color: 'brand-accent', desc: 'Eleitores mapeados' },
-          { label: 'Demandas Totais', value: '1.2K', trend: '85% ok', up: true, icon: MessageSquare, color: 'brand-emerald', desc: 'Taxa de resolução' },
-          { label: 'Presença Digital', value: '45.2K', trend: '+15%', up: true, icon: Activity, color: 'brand-accent', desc: 'Alcance orgânico' },
-          { label: 'Saldo Político', value: 'Positivo', trend: 'Estável', up: true, icon: Landmark, color: 'brand-amber', desc: 'Relação com base' },
-        ].map((stat, i) => (
-          <motion.div 
-            key={i} 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-10 glass-card transition-all hover:translate-y-[-8px] group border-white/5 hover:border-white/10"
+          {
+            label: 'Dias para a Eleição',
+            value: '192 dias',
+            progress: 62,
+            tone: 'from-brand-accent/50 to-cyan-400/50',
+          },
+          {
+            label: '% do Mandato Concluído',
+            value: '70%',
+            progress: 70,
+            tone: 'from-brand-emerald/50 to-emerald-300/50',
+          },
+        ].map((item, idx) => (
+          <div
+            key={idx}
+            className="bg-slate-900/60 border border-white/10 backdrop-blur-xl shadow-lg rounded-2xl p-5"
           >
-            <div className="flex items-center justify-between mb-8">
-              <div className={cn("p-5 rounded-2xl bg-white/5 border border-white/5 group-hover:border-white/10 transition-colors shadow-inner")}>
-                <stat.icon className={cn("w-7 h-7", `text-${stat.color}`)} />
-              </div>
-              <span className={cn(
-                "text-[10px] font-black px-4 py-1.5 rounded-full tracking-widest uppercase",
-                stat.up ? "bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/30" : "bg-brand-rose/20 text-brand-rose border border-brand-rose/30"
-              )}>
-                {stat.trend}
-              </span>
+            <div className="flex items-end justify-between gap-3 mb-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400 font-bold">{item.label}</p>
+              <p className="text-2xl font-black text-white">{item.value}</p>
             </div>
-            <h3 className="text-5xl font-black tracking-tighter text-white mb-2">{stat.value}</h3>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{stat.label}</p>
-            <div className="h-px w-full bg-white/5 my-6" />
-            <p className="text-[11px] font-bold text-slate-600 flex items-center gap-2">
-              <Zap className="w-3 h-3 text-brand-accent" />
-              {stat.desc}
-            </p>
-          </motion.div>
+            <div className="h-2 w-full rounded-full bg-slate-800/80 overflow-hidden border border-white/5">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${item.progress}%` }}
+                transition={{ duration: 0.8, delay: idx * 0.1 }}
+                className={cn('h-full rounded-full bg-gradient-to-r', item.tone)}
+              />
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Termômetro de Aprovação - Unique View */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="lg:col-span-4 p-12 glass-card flex flex-col border-white/5"
-        >
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h3 className="text-3xl font-black tracking-tighter text-white">Termômetro Popular</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-2">Sentimento das ruas</p>
-            </div>
-            <div className="p-3 bg-brand-emerald/10 rounded-xl">
-              <ThumbsUp className="w-6 h-6 text-brand-emerald" />
-            </div>
+      {/* Grade de Métricas 4 Colunas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        {[
+          { label: `Base de ${termoPlural}`, value: '18.4K', desc: `${termoPlural} mapeados` },
+          { label: 'Demandas Totais', value: '1.2K', desc: 'Taxa de resolução 85%' },
+          { label: 'Presença Digital', value: '45.2K', desc: 'Alcance orgânico' },
+          { label: 'Saldo Político', value: 'Positivo', desc: 'Relação com base' },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="bg-slate-900/60 border border-slate-700/50 backdrop-blur-md shadow-lg rounded-xl p-5 transition-all hover:shadow-2xl"
+          >
+            <p className="text-sm text-slate-300 mb-2">{stat.label}</p>
+            <p className="text-2xl font-bold text-white mb-3">{stat.value}</p>
+            <p className="text-sm text-slate-400">{stat.desc}</p>
           </div>
-          
-          <div className="flex-1 flex flex-col items-center justify-center py-10">
-            <div className="relative w-64 h-64 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="128" cy="128" r="110" stroke="currentColor" strokeWidth="24" fill="transparent" className="text-white/5" />
-                <motion.circle 
-                  initial={{ strokeDashoffset: 691 }}
-                  animate={{ strokeDashoffset: 691 - (691 * 72) / 100 }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  cx="128" cy="128" r="110" stroke="currentColor" strokeWidth="24" fill="transparent" 
-                  strokeDasharray={691}
-                  strokeLinecap="round"
-                  className="text-brand-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-7xl font-black tracking-tighter text-white">72%</span>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-2">Aprovação</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6 mt-12">
-            <div className="text-center group">
-              <p className="text-2xl font-black text-brand-emerald group-hover:scale-110 transition-transform">72%</p>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Favorável</p>
-            </div>
-            <div className="text-center border-x border-white/5 group">
-              <p className="text-2xl font-black text-brand-rose group-hover:scale-110 transition-transform">18%</p>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Contrário</p>
-            </div>
-            <div className="text-center group">
-              <p className="text-2xl font-black text-brand-amber group-hover:scale-110 transition-transform">10%</p>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Neutro</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Mídia Online & Sentimento - New from screenshots */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-8 p-12 glass-card border-white/5"
-        >
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h3 className="text-3xl font-black tracking-tighter text-white">Mídia Online & Sentimento</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-2">Análise de menções e alcance digital</p>
-            </div>
-            <div className="flex gap-3">
-              <button className="px-6 py-3 glass-item text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent border-brand-accent/30 hover:bg-brand-accent/10 transition-all">Urgência</button>
-              <button className="p-3 glass-item text-slate-400 hover:text-white transition-all"><ChevronRight className="w-4 h-4" /></button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div className="flex flex-col items-center justify-center relative">
-              <div className="relative w-64 h-64">
-                <RePie width={256} height={256}>
-                  <Pie
-                    data={[
-                      { name: 'Positivo', value: 432, color: '#10b981' },
-                      { name: 'Neutro', value: 267, color: '#6366f1' },
-                      { name: 'Negativo', value: 124, color: '#f43f5e' },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={8}
-                    dataKey="value"
-                  >
-                    {[
-                      { color: '#10b981' },
-                      { color: '#6366f1' },
-                      { color: '#f43f5e' },
-                    ].map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} className="stroke-none" />
-                    ))}
-                  </Pie>
-                </RePie>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-black text-white tracking-tighter">823</span>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">Menções</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-x-10 gap-y-4 mt-10 w-full">
-                {[
-                  { label: 'Portais', value: 432, color: 'brand-emerald' },
-                  { label: 'Twitter', value: 267, color: 'brand-accent' },
-                  { label: 'TV / Rádio', value: 124, color: 'brand-rose' },
-                  { label: 'Instagram', value: 85, color: 'brand-amber' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 glass-item border-white/5 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("w-2.5 h-2.5 rounded-full", `bg-${item.color}`)} />
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
-                    </div>
-                    <span className="text-[11px] font-black text-white">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Redes Sociais Impacto</h4>
-              <div className="space-y-8">
-                {[
-                  { label: 'Alcance Orgânico', value: 345, color: '#6366f1', max: 500 },
-                  { label: 'Engajamento Médio', value: 78, color: '#10b981', max: 100 },
-                  { label: 'Compartilhamentos', value: 757, color: '#f59e0b', max: 1000 },
-                ].map((item, i) => (
-                  <div key={i} className="space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-black">
-                      <span className="text-slate-400 uppercase tracking-widest">{item.label}</span>
-                      <span className="text-white">{item.value}</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(item.value / item.max) * 100}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)]"
-                        style={{ backgroundColor: item.color }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                className="mt-10 p-8 glass-item border-brand-accent/20 bg-brand-accent/5 relative overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Zap className="w-16 h-16 text-brand-accent" />
-                </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2 bg-brand-accent/20 rounded-lg">
-                    <Activity className="w-5 h-5 text-brand-accent" />
-                  </div>
-                  <p className="text-[10px] font-black text-brand-accent uppercase tracking-[0.2em]">Insights de IA</p>
-                </div>
-                <p className="text-sm font-bold text-slate-300 leading-relaxed">
-                  Crescimento de <span className="text-brand-emerald font-black">12%</span> em menções positivas após o último posicionamento sobre educação. <span className="text-brand-accent underline decoration-brand-accent/30">Ver relatório completo</span>
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
+        ))}
       </div>
 
-      {/* Heatmap Section - Updated Visual */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-12 glass-card border-white/5"
-      >
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h3 className="text-3xl font-black tracking-tighter text-white">Mapa de Calor de Demandas</h3>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-2">Concentração de pedidos por território</p>
-          </div>
-          <button className="px-8 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 transition-all rounded-2xl">
-            Expandir Mapa
-          </button>
+      {/* Lâmina de Radar Social */}
+      <div className="bg-slate-900/60 border border-white/10 backdrop-blur-xl shadow-lg rounded-2xl p-5 md:p-6">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 className="text-lg md:text-xl font-bold text-white">Radar Social • Os Ouvidos do Mandato</h2>
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400 font-bold">Leitura contínua das últimas 24h</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="h-[500px] glass-item relative overflow-hidden group rounded-[3rem] border-white/5">
-            <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80')] bg-cover grayscale invert" />
-            
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="absolute top-1/4 left-1/3 w-64 h-64 bg-brand-rose/30 blur-[80px] rounded-full" 
-            />
-            <motion.div 
-              animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-              className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-brand-amber/20 blur-[100px] rounded-full" 
-            />
-            
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div 
-                whileHover={{ scale: 1.1 }}
-                className="p-8 glass-card bg-brand-surface/90 border-brand-rose/30 text-center shadow-[0_0_50px_rgba(244,63,94,0.2)] backdrop-blur-2xl"
-              >
-                <div className="w-12 h-12 bg-brand-rose/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-6 h-6 text-brand-rose" />
-                </div>
-                <p className="text-[10px] font-black text-brand-rose uppercase tracking-[0.2em] mb-1">Zona Crítica</p>
-                <p className="text-3xl font-black text-white tracking-tighter">Vila Nova</p>
-                <div className="mt-4 pt-4 border-t border-white/5">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">145 Demandas Ativas</p>
-                </div>
-              </motion.div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 md:p-5">
+            <h3 className="text-sm font-bold text-slate-100 mb-4">Termos em Alta (24h)</h3>
+            <div className="flex flex-wrap items-end gap-x-3 gap-y-2 leading-tight">
+              <span className="text-3xl font-black text-rose-400">Impostos</span>
+              <span className="text-2xl font-extrabold text-emerald-400">Educação</span>
+              <span className="text-xl font-bold text-slate-200">Prefeito</span>
+              <span className="text-lg font-bold text-cyan-300">Transporte</span>
+              <span className="text-base font-semibold text-amber-300">Saúde</span>
+              <span className="text-sm font-semibold text-slate-400">Orçamento</span>
+              <span className="text-lg font-bold text-violet-300">Segurança</span>
+              <span className="text-sm font-semibold text-slate-500">Bairros</span>
             </div>
           </div>
 
-          <div className="space-y-10">
-            <div className="grid grid-cols-2 gap-6">
-              {DEMANDS_BY_NEIGHBORHOOD.map((item, i) => (
-                <motion.div 
-                  key={i} 
-                  whileHover={{ x: 5 }}
-                  className="p-8 glass-item border-white/5 hover:border-white/10 transition-all group"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-black text-white tracking-tight">{item.neighborhood}</span>
-                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{item.count}</span>
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 md:p-5">
+            <h3 className="text-sm font-bold text-slate-100 mb-4">Radar de Sentimento</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Menções Positivas', value: 65, bar: 'bg-brand-emerald' },
+                { label: 'Menções Neutras', value: 20, bar: 'bg-slate-400' },
+                { label: 'Negativas / Risco', value: 15, bar: 'bg-brand-rose' },
+              ].map((item, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-slate-200 font-semibold">{item.label}</p>
+                    <span className="text-white font-black">{item.value}%</span>
                   </div>
-                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5">
-                    <motion.div 
+                  <div className="h-2.5 w-full rounded-full bg-slate-900/80 overflow-hidden border border-white/5">
+                    <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(item.count / 150) * 100}%` }}
-                      transition={{ duration: 1, delay: i * 0.1 }}
-                      className="h-full rounded-full shadow-lg" 
-                      style={{ backgroundColor: item.color }} 
+                      animate={{ width: `${item.value}%` }}
+                      transition={{ duration: 0.7, delay: 0.1 + idx * 0.08 }}
+                      className={cn('h-full rounded-full', item.bar)}
                     />
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </div>
-            
-            <div className="p-10 glass-item border-brand-rose/20 bg-brand-rose/5 rounded-[2.5rem] relative overflow-hidden">
-              <div className="absolute -right-10 -bottom-10 opacity-5">
-                <AlertCircle className="w-48 h-48 text-brand-rose" />
-              </div>
-              <div className="flex items-center gap-5 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-brand-rose/20 flex items-center justify-center shadow-lg">
-                  <AlertCircle className="w-7 h-7 text-brand-rose" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-brand-rose uppercase tracking-[0.2em] mb-1">Alerta de Território</p>
-                  <p className="text-xl font-black text-white tracking-tighter">Crise em Vila Nova</p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-slate-400 leading-relaxed max-w-md">
-                O bairro <span className="text-white font-black">Vila Nova</span> concentra 40% das reclamações de infraestrutura. Recomendamos agenda de rua imediata para conter desgaste e apresentar soluções.
-              </p>
-              <button className="mt-8 px-8 py-4 bg-brand-rose text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-brand-rose/20">
-                Gerar Plano de Ação
-              </button>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Ferramentas do Mandato */}
+      <div className="bg-slate-900/50 border border-slate-700/50 backdrop-blur-md shadow-lg rounded-xl p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">Ferramentas do Mandato</h2>
+          <p className="text-xs text-slate-300">Centro de operações avançado</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {MANDATE_TOOLS.map((tool, idx) => (
+            <button
+              key={idx}
+              onClick={() => navigate(tool.route)}
+              className="flex items-center gap-2 px-3 py-2 bg-slate-800/60 border border-slate-700/50 rounded-lg text-left text-slate-200 hover:text-white hover:bg-slate-800 transition-all duration-200"
+              type="button"
+            >
+              <tool.icon className="w-4 h-4" />
+              <span className="text-xs font-medium leading-tight">{tool.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Grid inferior 2/3 + 1/3 */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Card principal do calendário com gráficos e mapa */}
+        <div className="xl:col-span-2 bg-slate-900/60 border border-slate-700/50 backdrop-blur-md shadow-lg rounded-xl p-6 transition-all hover:shadow-2xl space-y-5">
+          <h2 className="text-xl font-bold text-white">Calendário Editorial & Atividades Recentes</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3 bg-slate-800/70 p-4 border border-slate-700/50 rounded-lg">
+              <h3 className="text-sm font-semibold text-slate-100">Próximos Eventos</h3>
+              {[
+                { date: 'Seg 31', title: 'Reunião com Base' },
+                { date: 'Ter 01', title: 'Release de Infraestrutura' },
+                { date: 'Qua 02', title: 'Votação Crucial' },
+              ].map((event, idx) => (
+                <div key={idx} className="flex items-start gap-2 p-2 rounded-lg bg-slate-900/30 border border-slate-700/50">
+                  <Calendar className="w-4 h-4 text-cyan-300 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-slate-300">{event.date}</p>
+                    <p className="text-sm text-white font-semibold">{event.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3 bg-slate-800/70 p-4 border border-slate-700/50 rounded-lg">
+              <h3 className="text-sm font-semibold text-slate-100">Atividades Recentes</h3>
+              {[
+                { user: 'Sistema IA', action: 'Gerou análise de sentimento', time: '2h atrás' },
+                { user: 'Assessor PM', action: 'Criou novo release', time: '4h atrás' },
+                { user: `${termo('cidadao')} (App)`, action: 'Submeteu demanda urgente', time: '6h atrás' },
+              ].map((activity, idx) => (
+                <div key={idx} className="flex items-start gap-2 p-2 rounded-lg bg-slate-900/30 border border-slate-700/50">
+                  <Users className="w-4 h-4 text-slate-300 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-slate-300 font-medium">{activity.user}</p>
+                    <p className="text-sm text-white">{activity.action}</p>
+                    <p className="text-xs text-slate-400">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-4">
+              <h3 className="text-sm font-bold text-slate-100 mb-3">Histórico de Popularidade</h3>
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={POPULARITY_HISTORY} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorApproval" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                    <YAxis stroke="#94a3b8" tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', color: '#e2e8f0' }} />
+                    <Area type="monotone" dataKey="approval" stroke="#0ea5e9" fill="url(#colorApproval)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/70 border border-slate-700/50 rounded-lg p-4">
+              <h3 className="text-sm font-bold text-slate-100 mb-3">Mapa de Demandas</h3>
+              <div className="h-44 rounded-lg overflow-hidden border border-slate-700/50">
+                <div className="h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-slate-200 p-3">
+                  <div className="space-y-2">
+                    {topBairros.length === 0 && (
+                      <p className="text-xs text-slate-400">Sem demandas por bairro para o tenant ativo.</p>
+                    )}
+                    {topBairros.map((item, idx) => {
+                      const max = topBairros[0]?.total || 1;
+                      const width = Math.max(10, Math.round((item.total / max) * 100));
+                      return (
+                        <div key={`${item.bairro}-${idx}`}>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3 text-cyan-300" />{item.bairro}</span>
+                            <span className="font-black text-white">{item.total}</span>
+                          </div>
+                          <div className="mt-1 h-1.5 rounded-full bg-slate-700">
+                            <div className="h-full rounded-full bg-cyan-400" style={{ width: `${width}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card lateral de alertas e aprovações */}
+        <div className="space-y-5">
+          <div className="bg-slate-900/60 border border-slate-700/50 backdrop-blur-md shadow-lg rounded-xl p-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-rose-400" />
+              Alertas Urgentes
+            </h2>
+            <div className="space-y-3">
+              {URGENT_ALERTS.map((alert) => (
+                <button
+                  key={alert.id}
+                  type="button"
+                  onClick={() => setSelectedAlert(alert)}
+                  className="w-full p-3 bg-slate-800/70 border border-slate-700/50 rounded-lg text-left"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="text-sm font-bold text-white">{alert.title}</p>
+                      <p className="text-xs text-slate-300 mt-1">{alert.time}</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded ${
+                      alert.severity === 'Crítica' ? 'bg-rose-100 text-rose-700' :
+                      alert.severity === 'Alta' ? 'bg-amber-100 text-amber-700' :
+                      'bg-cyan-100 text-cyan-700'
+                    }`}>
+                      {alert.severity}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => alert('Filtros aplicados! Atualizando dashboard...')} className="w-full mt-4 bg-brand-accent text-white px-4 py-2 text-sm rounded-lg hover:bg-brand-accent/90 transition-all">
+              Aplicar
+            </button>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-700/50 backdrop-blur-md shadow-lg rounded-xl p-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              Aprovações Pendentes
+            </h2>
+            <div className="space-y-3">
+              {pendingApprovals.map((approval) => (
+                <div key={approval.id} className="p-3 bg-slate-800/70 border border-slate-700/50 rounded-lg flex justify-between items-start gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-white">{approval.title}</p>
+                    <p className="text-xs text-slate-300 mt-1">{approval.status}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleApprovalAction(approval.id, 'Aprovar')}
+                      className="px-2 py-1 text-[11px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    >
+                      Aprovar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApprovalAction(approval.id, 'Rejeitar')}
+                      className="px-2 py-1 text-[11px] font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                    >
+                      Rejeitar
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-slate-300" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => navigate('/gabinete/planejamento')} className="w-full mt-4 bg-brand-accent text-white px-4 py-2 text-sm rounded-lg hover:bg-brand-accent/90 transition-all">
+              Revisar Todas
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showNewReleaseModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowNewReleaseModal(false)}>
+            <motion.form initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} onSubmit={handleCreateRelease} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-lg font-bold text-white">Novo Release</h3>
+              <input required value={releaseForm.title} onChange={(e) => setReleaseForm((c) => ({ ...c, title: e.target.value }))} placeholder="Título" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <textarea required value={releaseForm.content} onChange={(e) => setReleaseForm((c) => ({ ...c, content: e.target.value }))} placeholder="Conteúdo" rows={5} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <input required type="date" value={releaseForm.date} onChange={(e) => setReleaseForm((c) => ({ ...c, date: e.target.value }))} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowNewReleaseModal(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-white">Cancelar</button>
+                <button type="submit" disabled={isSavingRelease} className="px-4 py-2 rounded-lg bg-brand-accent text-white disabled:opacity-70">{isSavingRelease ? 'Salvando...' : 'Salvar'}</button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNewCitizenModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowNewCitizenModal(false)}>
+            <motion.form initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} onSubmit={handleCreateCitizen} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-lg font-bold text-white">Adicionar {termo('cidadao')}</h3>
+              <input required value={citizenForm.name} onChange={(e) => setCitizenForm((c) => ({ ...c, name: e.target.value }))} placeholder="Nome" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <input required value={citizenForm.neighborhood} onChange={(e) => setCitizenForm((c) => ({ ...c, neighborhood: e.target.value }))} placeholder="Bairro" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <input required value={citizenForm.contact} onChange={(e) => setCitizenForm((c) => ({ ...c, contact: e.target.value }))} placeholder="Contato" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowNewCitizenModal(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-white">Cancelar</button>
+                <button type="submit" disabled={isSavingCitizen} className="px-4 py-2 rounded-lg bg-brand-accent text-white disabled:opacity-70">{isSavingCitizen ? 'Salvando...' : 'Salvar'}</button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNewPautaModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowNewPautaModal(false)}>
+            <motion.form initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} onSubmit={handleCreatePauta} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-lg font-bold text-white">Nova Pauta</h3>
+              <input required value={pautaForm.title} onChange={(e) => setPautaForm((c) => ({ ...c, title: e.target.value }))} placeholder="Título" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <textarea required value={pautaForm.description} onChange={(e) => setPautaForm((c) => ({ ...c, description: e.target.value }))} placeholder="Descrição" rows={4} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <input required type="date" value={pautaForm.date} onChange={(e) => setPautaForm((c) => ({ ...c, date: e.target.value }))} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowNewPautaModal(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-white">Cancelar</button>
+                <button type="submit" disabled={isSavingPauta} className="px-4 py-2 rounded-lg bg-brand-accent text-white disabled:opacity-70">{isSavingPauta ? 'Salvando...' : 'Salvar'}</button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedAlert && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setSelectedAlert(null)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-3">
+              <h3 className="text-lg font-bold text-white">{selectedAlert.title}</h3>
+              <p className="text-sm text-slate-300">Severidade: {selectedAlert.severity}</p>
+              <p className="text-sm text-slate-300">Prazo: {selectedAlert.time}</p>
+              <p className="text-sm text-slate-200 leading-relaxed">{selectedAlert.details}</p>
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setSelectedAlert(null)} className="px-4 py-2 rounded-lg bg-brand-accent text-white">Fechar</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+export default GabineteDashboard;

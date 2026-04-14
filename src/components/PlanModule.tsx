@@ -13,35 +13,35 @@ import { cn } from '../lib/utils';
 
 export function PlanModule({ isDarkMode }: { isDarkMode: boolean }) {
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Meu <span className="text-blue-600">Plano</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            Meu <span className="text-brand-accent">Plano</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Gestão de assinatura, recursos e limites do sistema.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button className="flex items-center gap-3 px-6 py-4 bg-brand-accent text-white rounded-2xl font-bold hover:bg-brand-accent/90 transition-all shadow-lg shadow-blue-500/20">
             <Zap className="w-5 h-5 text-amber-400" />
             Upgrade de Plano
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="lg:col-span-1 space-y-8">
           <div className={cn(
             "p-10 rounded-[3rem] shadow-xl border transition-all",
             isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-50"
           )}>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl">
+                <div className="w-16 h-16 bg-blue-50 text-brand-accent rounded-2xl flex items-center justify-center font-black text-xl">
                   <Shield className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-black">Plano Enterprise</h3>
+                  <h3 className="text-xl font-black">Plano Enterprise</h3>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Assinatura Ativa • Renovação em 12/04/2024</p>
                 </div>
               </div>
@@ -54,21 +54,21 @@ export function PlanModule({ isDarkMode }: { isDarkMode: boolean }) {
               <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Usuários Disponíveis</p>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl font-black">12/25</span>
-                  <span className="text-sm font-bold text-blue-600">48%</span>
+                  <span className="text-xl font-black">12/25</span>
+                  <span className="text-sm font-bold text-brand-accent">48%</span>
                 </div>
                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full w-[48%] bg-blue-600" />
+                  <div className="h-full w-[48%] bg-brand-accent" />
                 </div>
               </div>
               <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Armazenamento (IA)</p>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl font-black">4.2GB/10GB</span>
-                  <span className="text-sm font-bold text-blue-600">42%</span>
+                  <span className="text-xl font-black">4.2GB/10GB</span>
+                  <span className="text-sm font-bold text-brand-accent">42%</span>
                 </div>
                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full w-[42%] bg-blue-600" />
+                  <div className="h-full w-[42%] bg-brand-accent" />
                 </div>
               </div>
             </div>

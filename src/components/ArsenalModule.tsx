@@ -62,11 +62,11 @@ export function ArsenalModule({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">
-            Arsenal de <span className="text-blue-600">Embate</span>
+          <h1 className="text-2xl font-black tracking-tighter">
+            Arsenal de <span className="text-brand-accent">Embate</span>
           </h1>
           <p className="text-slate-500 font-medium mt-2">Inteligência defensiva e contra-narrativas estratégicas.</p>
         </div>
@@ -78,8 +78,8 @@ export function ArsenalModule({ isDarkMode }: { isDarkMode: boolean }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="lg:col-span-1 space-y-6">
           {arsenal.map((item) => (
             <motion.div 
               key={item.id}
@@ -125,7 +125,7 @@ export function ArsenalModule({ isDarkMode }: { isDarkMode: boolean }) {
                     <button 
                       onClick={() => generateAIRebuttal(item)}
                       disabled={generatingId === item.id}
-                      className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest hover:underline"
+                      className="flex items-center gap-2 text-brand-accent font-bold text-xs uppercase tracking-widest hover:underline"
                     >
                       {generatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                       Refinar com IA
@@ -156,7 +156,7 @@ export function ArsenalModule({ isDarkMode }: { isDarkMode: boolean }) {
                     <p className="text-slate-300 font-medium leading-relaxed italic">
                       "{item.ia_rebuttal}"
                     </p>
-                    <button className="w-full py-4 bg-blue-600 rounded-2xl font-bold hover:bg-blue-700 transition-all">
+                    <button className="w-full py-4 bg-brand-accent rounded-2xl font-bold hover:bg-brand-accent/90 transition-all">
                       Copiar para Discurso
                     </button>
                   </motion.div>
@@ -184,13 +184,13 @@ export function ArsenalModule({ isDarkMode }: { isDarkMode: boolean }) {
             </div>
           </div>
 
-          <div className="p-10 rounded-[2.5rem] shadow-xl bg-blue-600 text-white">
+          <div className="p-10 rounded-[2.5rem] shadow-xl bg-brand-accent text-white">
             <Shield className="w-12 h-12 mb-6 opacity-50" />
             <h3 className="text-2xl font-black mb-2">Escudo Digital</h3>
             <p className="text-blue-100 font-medium leading-relaxed mb-6">
               Seu arsenal está 85% atualizado. Recomendamos revisar o tema "Educação" para o próximo debate.
             </p>
-            <button className="w-full py-4 bg-white text-blue-600 rounded-2xl font-bold hover:bg-blue-50 transition-all">
+            <button className="w-full py-4 bg-white text-brand-accent rounded-2xl font-bold hover:bg-blue-50 transition-all">
               Atualizar Arsenal
             </button>
           </div>
