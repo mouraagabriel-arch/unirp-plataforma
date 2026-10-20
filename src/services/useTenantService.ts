@@ -119,11 +119,11 @@ export function useTenantService() {
             const [clippingCountRes, crmCountRes] = await Promise.all([
               supabase
                 .from('enterprise_clipping')
-                .select('*', { count: 'exact', head: true })
+                .select('id', { count: 'exact', head: true })
                 .eq('ambiente', tenant.id),
               supabase
                 .from('enterprise_jornalistas')
-                .select('*', { count: 'exact', head: true })
+                .select('id', { count: 'exact', head: true })
                 .eq('tenant_id', tenant.id),
             ]);
 
@@ -335,10 +335,14 @@ export function useTenantService() {
           .insert([{ ...payload, tenant_id: tenantId }]);
       },
 
-      async listHubDemandas() {
+      async listHubDemandas(options?: { limit?: number; offset?: number }) {
+        const limit = Math.min(Math.max(options?.limit ?? 50, 1), 200);
+        const offset = Math.max(options?.offset ?? 0, 0);
         return supabase
           .from('enterprise_demandas')
-          .select('*');
+          .select('id, ticket_codigo, titulo, secretaria_solicitante, tipo_peca, prazo_texto, status_ticket, briefing, responsavel, prioridade, created_at')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
       },
 
       async listHubReleaseDemandas() {
@@ -357,11 +361,14 @@ export function useTenantService() {
           .select();
       },
 
-      async listHubHistory() {
+      async listHubHistory(options?: { limit?: number; offset?: number }) {
+        const limit = Math.min(Math.max(options?.limit ?? 100, 1), 300);
+        const offset = Math.max(options?.offset ?? 0, 0);
         return supabase
           .from('enterprise_demandas')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('id, titulo, tipo_peca, status_ticket, briefing, created_at')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
       },
 
       async deleteHubHistoryItem(id: string) {

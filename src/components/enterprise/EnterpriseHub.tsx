@@ -180,6 +180,7 @@ function getTimelineStatusLabel(status: PostRedeSocial['status']) {
 }
 
 const LS_KEY = 'hub_editor_draft';
+const HISTORY_PAGE_LIMIT = 100;
 
 function loadDraft() {
   try {
@@ -303,7 +304,7 @@ export function EnterpriseHub({ isDarkMode }: { isDarkMode: boolean }) {
   };
 
   const loadHistory = async (filter: 'todos' | 'release' | 'social' = historyFilter) => {
-    const { data, error } = await tenantService.listHubHistory();
+    const { data, error } = await tenantService.listHubHistory({ limit: HISTORY_PAGE_LIMIT, offset: 0 });
 
     if (error) {
       alert(`Erro ao carregar histórico: ${error.message}`);

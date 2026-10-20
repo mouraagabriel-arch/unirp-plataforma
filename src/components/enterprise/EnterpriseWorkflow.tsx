@@ -33,6 +33,7 @@ interface Task {
   dueDate: string; // ISO date YYYY-MM-DD
   tags: string[];
   attachments: number;
+  attachmentPaths: string[];
   checklist: ChecklistItem[];
 }
 
@@ -71,6 +72,7 @@ const EMPTY_TASK: Task = {
   dueDate: '',
   tags: ['Pauta'],
   attachments: 0,
+  attachmentPaths: [],
   checklist: DEFAULT_CHECKLIST,
 };
 
@@ -118,6 +120,7 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
             dueDate: row.deadline ?? row.prazo_texto ?? '',
             tags: Array.isArray(row.tags) ? row.tags : [],
             attachments: row.attachments ?? 0,
+            attachmentPaths: Array.isArray(row.attachments_paths) ? row.attachments_paths : [],
             checklist: Array.isArray(row.checklist) ? (row.checklist as ChecklistItem[]) : DEFAULT_CHECKLIST.map((i) => ({ ...i })),
           })),
       })));
@@ -178,7 +181,8 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
       assignee: saved.responsavel ?? '',
       dueDate: saved.deadline ?? '',
       tags: Array.isArray(saved.tags) ? saved.tags : [],
-      attachments: saved.attachments ?? 0,
+      attachments: 0,
+      attachmentPaths: [],
       checklist: Array.isArray(saved.checklist) ? saved.checklist : DEFAULT_CHECKLIST.map((i) => ({ ...i })),
     };
 
@@ -234,6 +238,12 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
     setDragOverColumn(null);
   };
 
+  const removeAttachmentsFromStorage = async (paths: string[]) => {
+    if (!paths.length) return null;
+    const { error } = await supabase.storage.from('attachments').remove(paths);
+    return error;
+  };
+
   const deleteTask = async (taskId: string, columnId: Column['id']) => {
     const confirmed = await new Promise<boolean>((resolve) => {
       toast(
@@ -262,6 +272,17 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
 
     if (!confirmed) return;
 
+    const task = columns
+      .find((column) => column.id === columnId)
+      ?.tasks.find((item) => item.id === taskId);
+
+    const attachmentPaths = task?.attachmentPaths ?? [];
+    const storageDeleteError = await removeAttachmentsFromStorage(attachmentPaths);
+    if (storageDeleteError) {
+      toast.error(`Erro ao remover anexos do Storage: ${storageDeleteError.message}`);
+      return;
+    }
+
     const { error } = await tenantService
       .from('enterprise_pautas')
       .delete()
@@ -281,15 +302,20 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
     toast.success('Card excluído.');
   };
 
-  const uploadAttachments = async (taskId: string): Promise<number> => {
-    if (!attachedFiles.length) return 0;
+  const uploadAttachments = async (taskId: string): Promise<{ uploaded: number; paths: string[] }> => {
+    if (!attachedFiles.length) return { uploaded: 0, paths: [] };
     let uploaded = 0;
+    const uploadedPaths: string[] = [];
     for (const file of attachedFiles) {
-      const path = `enterprise_pautas/${taskId}/${Date.now()}_${file.name}`;
+      const sanitizedName = file.name.replace(/\s+/g, '_');
+      const path = `enterprise_pautas/${taskId}/${Date.now()}_${sanitizedName}`;
       const { error } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
-      if (!error) uploaded++;
+      if (!error) {
+        uploaded++;
+        uploadedPaths.push(path);
+      }
     }
-    return uploaded;
+    return { uploaded, paths: uploadedPaths };
   };
 
   const handleSaveTask = async () => {
@@ -306,16 +332,32 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
       status_coluna: taskColumn,
       deadline: taskForm.dueDate || null,
       checklist: taskForm.checklist,
+      attachments_paths: taskForm.attachmentPaths,
     };
 
     if (editingTaskId) {
-      const uploadedCount = await uploadAttachments(editingTaskId);
+      let nextAttachmentPaths = taskForm.attachmentPaths;
+      let nextAttachmentCount = taskForm.attachments;
+
+      if (attachedFiles.length > 0) {
+        const uploadedResult = await uploadAttachments(editingTaskId);
+        const oldPaths = taskForm.attachmentPaths;
+        const deleteOldError = await removeAttachmentsFromStorage(oldPaths);
+        if (deleteOldError) {
+          setIsUploading(false);
+          toast.error(`Erro ao substituir anexos no Storage: ${deleteOldError.message}`);
+          return;
+        }
+        nextAttachmentPaths = uploadedResult.paths;
+        nextAttachmentCount = uploadedResult.paths.length;
+      }
 
       const { error } = await tenantService
         .from('enterprise_pautas')
         .update({
           ...basePayload,
-          attachments: taskForm.attachments + uploadedCount,
+          attachments: nextAttachmentCount,
+          attachments_paths: nextAttachmentPaths,
         })
         .eq('id', editingTaskId);
 
@@ -329,7 +371,8 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
       const updatedTask: Task = {
         ...taskForm,
         id: editingTaskId,
-        attachments: taskForm.attachments + uploadedCount,
+        attachments: nextAttachmentCount,
+        attachmentPaths: nextAttachmentPaths,
       };
 
       setColumns((prev) => prev.map((column) => {
@@ -344,7 +387,7 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
     } else {
       const { data, error } = await tenantService
         .from('enterprise_pautas')
-        .insert([basePayload])
+        .insert([{ ...basePayload, attachments: 0, attachments_paths: [] }])
         .select();
 
       if (error) {
@@ -356,10 +399,14 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
       if (!data?.length) { setIsUploading(false); return; }
 
       const saved = data[0];
-      const uploadedCount = await uploadAttachments(saved.id);
+      const uploadedResult = await uploadAttachments(saved.id);
+      const uploadedCount = uploadedResult.uploaded;
 
       if (uploadedCount > 0) {
-        await tenantService.from('enterprise_pautas').update({ attachments: uploadedCount }).eq('id', saved.id);
+        await tenantService
+          .from('enterprise_pautas')
+          .update({ attachments: uploadedCount, attachments_paths: uploadedResult.paths })
+          .eq('id', saved.id);
       }
 
       setIsUploading(false);
@@ -373,6 +420,7 @@ export function EnterpriseWorkflow({ isDarkMode }: { isDarkMode: boolean }) {
         dueDate: saved.deadline ?? '',
         tags: Array.isArray(saved.tags) ? saved.tags : [],
         attachments: uploadedCount,
+        attachmentPaths: uploadedResult.paths,
         checklist: Array.isArray(saved.checklist) ? saved.checklist : DEFAULT_CHECKLIST.map((i) => ({ ...i })),
       };
 
